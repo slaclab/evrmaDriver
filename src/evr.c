@@ -505,6 +505,7 @@ static int hw_support_evr_init(struct modac_hw_support_data *hw_support_data)
 				
 				hw_data->out_cfg[otype].res_start = current_res_inx;
 				hw_data->out_cfg[otype].res_count = cnt;
+				hw_data->out_cfg[otype].evr_map_reg_start = evr_map_reg_start;
 				
 				current_res_inx += cnt;
 			}
