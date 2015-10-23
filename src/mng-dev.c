@@ -406,18 +406,6 @@ err:
 	}
 }
 
-static void find_vdev_res(struct mngdev_data *mngdev,
-		int vdev_id, struct mngdev_ioctl_hw_header_vres *vres,
-		struct modac_rm_vres_desc *vres_desc)
-{
-	struct modac_vdev_des *vdev_des = 
-				list_find_vdev(mngdev, vdev_id);
-	if(vdev_des == NULL) {
-		vres_desc->type = MODAC_RES_TYPE_NONE;
-	} else {
-		mngdev_vdev_get_vres_desc(mngdev, vdev_des, vres, vres_desc);
-	}
-}
 
 
 
@@ -539,6 +527,7 @@ static long mngdev_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned 
 		
 		struct modac_rm_vres_desc res[2];
 		struct mngdev_ioctl_hw_header header_args;
+		struct modac_vdev_des *vdev_des;
 		int i;
 		
 		// copy only the header part
@@ -547,19 +536,38 @@ static long mngdev_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned 
 			goto bail;
 		}
 		
+		vdev_des = list_find_vdev(mngdev, header_args.vdev_id);
+		
+		if(vdev_des != NULL && vdev_des->usage_counter > 0) {
+			
+			/*
+			 * The MMG_DEV can't access resources of an open VIRT_DEV
+			 */
+			ret = -EACCES;
+			goto bail;
+		}
+
 		for(i = 0; i < 2; i ++) {
 			
+			struct modac_rm_vres_desc *vres_desc = &res[i];
+			struct mngdev_ioctl_hw_header_vres *vres = &header_args.vres[i];
+			
 			// only check the defined ones
-			if(header_args.vres[i].type == MODAC_RES_TYPE_NONE) {
-				res[i].type = MODAC_RES_TYPE_NONE;
-				res[i].index = -1; // this will not be used anyway
+			if(vres->type == MODAC_RES_TYPE_NONE) {
+				vres_desc->type = MODAC_RES_TYPE_NONE;
+				vres_desc->index = -1; // this will not be used anyway
 				continue;
 			}
 			
-			find_vdev_res(mngdev, 
-					header_args.vdev_id, &header_args.vres[i], &res[i]);
+			if(vdev_des == NULL) {
+				vres_desc->type = MODAC_RES_TYPE_NONE;
+				vres_desc->index = -1; // this will not be used anyway
+			} else {
+				mngdev_vdev_get_vres_desc(mngdev, vdev_des, vres, vres_desc);
+			}
+// // // // // 			find_vdev_res(mngdev, 
 			
-			ret = modac_rm_get_owner(&mngdev->rm_data, &res[i]);
+			ret = modac_rm_get_owner(&mngdev->rm_data, vres_desc);
 			
 			if(ret != header_args.vdev_id) {
 				// the resource is not owned by the wanted instance
