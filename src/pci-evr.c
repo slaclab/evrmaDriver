@@ -68,7 +68,7 @@
 
 // Not in EVR-MRM-007.pdf but found elsewhere:
 
-#define PCI_DEVICE_ID_MRF_PMCEVR200 0x10C8
+#define PCI_DEVICE_ID_MRF_PMCEVR200 0x10C8 // this is an old card with only 0x2000 of address space length
 #define PCI_DEVICE_ID_MRF_PXIEVR220 0x10DC
 #define PCI_DEVICE_ID_MRF_PXIEVR230 0x10E6
 
@@ -93,6 +93,7 @@
 	#define EMCOR_PCI_DEVICE	0x1000
 #endif
 
+
 static const struct pci_device_id evrma_pci_ids[] = {
 
 	{ PCI_DEVICE(PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PMCEVR230), },
@@ -108,6 +109,7 @@ static const struct pci_device_id evrma_pci_ids[] = {
 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVR300), },
 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PCIEEVR300), },
 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVRTG300), },
+// 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PMCEVR200), },
 
 	{ PCI_DEVICE_SUB(PCI_ANY_ID, PCI_ANY_ID, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PMCEVR230), },
 	{ PCI_DEVICE_SUB(PCI_ANY_ID, PCI_ANY_ID, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVR300), },
@@ -804,6 +806,12 @@ static int evrma_pci_probe(struct pci_dev *pcidev, const struct pci_device_id *d
 			}
 		}
 	}
+	
+	if(ev_device->length == 0) {
+		printk(KERN_ERR "No BAR has a memory region long enough. Aborting.\n");
+		cleanup(ev_device, current_clean);
+		return -ENXIO;
+	}
 
 #ifdef DEBUG_EMCOR_CARD
 	if(ev_device->pci_bridge == &pci_bridge_emcor) {
@@ -890,7 +898,7 @@ static int evrma_pci_probe(struct pci_dev *pcidev, const struct pci_device_id *d
 	
 	ev_device->irq = pcidev->irq;
 	hw_info_n += scnprintf(hw_info_ptr + hw_info_n, HW_INFO_SIZE - hw_info_n,
-			"IRQ: %d, ", ev_device->irq);
+			", IRQ: %d, ", ev_device->irq);
 	
 	return finish_probe(ev_device, id, current_clean);
 
