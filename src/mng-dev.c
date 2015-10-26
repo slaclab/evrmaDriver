@@ -407,9 +407,6 @@ err:
 }
 
 
-
-
-
 /*****  MNG_DEV file operations  *****/
 
 static int mngdev_open(struct inode *inode, struct file *filp)
@@ -565,13 +562,11 @@ static long mngdev_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned 
 			} else {
 				mngdev_vdev_get_vres_desc(mngdev, vdev_des, vres, vres_desc);
 			}
-// // // // // 			find_vdev_res(mngdev, 
-			
+
 			ret = modac_rm_get_owner(&mngdev->rm_data, vres_desc);
 			
 			if(ret != header_args.vdev_id) {
 				// the resource is not owned by the wanted instance
-				
 				ret = -EACCES;
 				goto end2;
 			}
@@ -1031,55 +1026,6 @@ static ssize_t show_dbg(struct device *dev, struct device_attribute *attr,
 	return ret;
 }
 
-/* 
- * This is a function needed only to test the hot-unplug of the evr
- * simulation device. This function will be removed in the production
- * version.
- */
-static ssize_t store_test_destroy(struct device *dev, struct device_attribute *attr,
-			 const char *buf, size_t count)
-{
-	void test_modac_mngdev1_destroy(struct device *dev);
-	
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,15,00)
-	
-	/*
-	 * NOTE: The implementation of the remove_store method in the kernel's
-	 * drivers/pci/pci-sysfs.c has
-	 * changed in the Linux version 3.15. A new implementation for 
-	 * this 'store_test_destroy' must thus be provided if still needed for
-	 * test purposes.
-	 */
-	
-	#error Unsupported.
-	
-#else
-
-	/*
-	 * NOTE: This is copied directly from the Linux kernel and adapted to
-	 * the needs of this test function. 
-	 * 
-	 * In drivers/pci/pci-sysfs.c the 'remove' method is done the same way as 
-	 * follows:
-	 */
-	
-	int ret = 0;
-	unsigned long val;
-
-	if (kstrtoul(buf, 0, &val) < 0)
-		return -EINVAL;
-
-	/* An attribute cannot be unregistered by one of its own methods,
-	 * so we have to use this roundabout approach.
-	 */
-	if (val)
-		ret = device_schedule_callback(dev, test_modac_mngdev1_destroy);
-	if (ret)
-		count = ret;
-	return count;
-#endif
-}
-
 static ssize_t store_hw_regs(struct device *dev, struct device_attribute *attr,
 			 const char *buf, size_t count)
 {
@@ -1198,7 +1144,6 @@ static ssize_t show_events(struct device *dev, struct device_attribute *attr,
 static struct device_attribute dev_attr_misc[] = {
 	__ATTR(alloc, S_IRUGO, show_alloc, NULL),
 	__ATTR(dbg, S_IRUGO | S_IWUGO, show_dbg, store_dbg),
-	__ATTR(test_destroy, S_IWUGO, NULL, store_test_destroy),
 	__ATTR(regs, S_IRUGO | S_IWUGO, show_hw_regs, store_hw_regs),
 	__ATTR(events, S_IRUGO, show_events, NULL),
 	__ATTR(hw_info, S_IRUGO, show_hw_info, NULL),
@@ -1213,7 +1158,6 @@ static struct attribute *attrs_misc[] = {
 	&dev_attr_misc[2].attr,
 	&dev_attr_misc[3].attr,
 	&dev_attr_misc[4].attr,
-	&dev_attr_misc[5].attr,
 	NULL
 };
 

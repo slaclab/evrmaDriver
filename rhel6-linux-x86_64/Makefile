@@ -9,12 +9,12 @@ all:
 	$(MAKE) compile
 	
 
-evrma-test-objs	+= main_test.o mng-dev.o virt-dev.o rm.o packet-queue.o 
-evrma-test-objs	+= evr.o evr-irq-events.o evr-dbg.o 
-evrma-test-objs	+= plx.o pci-evr.o 
-evrma-test-objs	+= evr-sim.o event-list.o
+evrma-objs	+= main_evrma.o mng-dev.o virt-dev.o rm.o packet-queue.o 
+evrma-objs	+= evr.o evr-irq-events.o evr-dbg.o 
+evrma-objs	+= plx.o pci-evr.o 
+evrma-objs	+= evr-sim.o event-list.o
 
-obj-m += evrma-test.o
+obj-m += evrma.o
 
 compile:
 	$(MAKE) ARCH=x86 CROSS_COMPILE=$(XCROSS_HOME) -C $(KERNELDIR) M=$(PWD) modules

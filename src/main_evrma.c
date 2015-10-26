@@ -24,59 +24,29 @@
 
 MODULE_LICENSE("Dual BSD/GPL");
 MODULE_AUTHOR("Cosylab, d.d.");
-MODULE_DESCRIPTION("Driver MODAC-EVR-TEST.");
+MODULE_DESCRIPTION("Driver EVRMA.");
 MODULE_VERSION("1.0.0");
 
-#define EVR_DRV_NAME "evr_drv"
-
-
-
-// This is for debug purposes only so the 'test_modac_mngdev1_destroy'
-// could be called from some point in the kernel code to test the 
-// hot-unplug of the simulation device. Note that 'test_modac_mngdev1_destroy'
-// can not be called from the EVRMA code directly.
-
-// #define TEST_DESTROY
-
+#define EVR_DRV_NAME "evrma_drv"
 
 /*
  * to protect the test device calls
  */
 static struct mutex mutex;
 
-#ifdef TEST_DESTROY
-static int evr_sim_test_mngdev_destroyed;
-#endif
-
 static int dev_major;
 
 static struct modac_mngdev_des test_mngdev_des = {
 	major: -1,
 	minor: (MAX_MNG_DEVS - 1) * MINOR_MULTIPLICATOR,
-	io_start: NULL, /* this NULL triggers the simulation */
-	io_size: 256,
+	io_start: NULL, /* this NULL marks the simulation */
+	io_size: 256, /* not used */
 	name: "evr-sim-mng",
 	hw_support: &hw_support_evr,
 	irq_set: evr_sim_irq_set,
 	io_rw: &evr_sim_rw_plugin,
 };
 
-
-#ifdef TEST_DESTROY
-void test_modac_mngdev1_destroy(struct device *dev)
-{
-	printk(KERN_DEBUG "main test: Destroying evr-sim-mng\n");
-	
-	mutex_lock(&mutex);
-	
-	if(!evr_sim_test_mngdev_destroyed) {
-		evr_sim_test_mngdev_destroyed = 1;
-		modac_mngdev_destroy(&test_mngdev_des);
-	}
-	
-	mutex_unlock(&mutex);
-}
-#endif
 
 #define NUM_MINORS 256
 
@@ -87,10 +57,6 @@ static int __init evrma_init(void)
 	dev_t dev_num = MKDEV(0, 0);
 	
 	printk(KERN_INFO "EVRMA loading in\n");
-	
-#ifdef TEST_DESTROY
-	evr_sim_test_mngdev_destroyed = 0;
-#endif
 	
 	mutex_init(&mutex);
 	
@@ -126,14 +92,7 @@ static void __exit evrma_fini(void)
 	evrma_pci_fini();
 	
 	mutex_lock(&mutex);
-#ifdef TEST_DESTROY
-	if(!evr_sim_test_mngdev_destroyed) {
-		evr_sim_test_mngdev_destroyed = 1;
-		modac_mngdev_destroy(&test_mngdev_des);
-	}
-#else
 	modac_mngdev_destroy(&test_mngdev_des);
-#endif
 	mutex_unlock(&mutex);
 	
 	modac_mngdev_fini();
