@@ -16,7 +16,7 @@
 #include "evr-sim.h"
 #include "linux-evrma.h"
 
- 
+
 #define MODAC_HW_EVR_ID "evr"
 
 // even if the property is 0-bit wide, it is still settable, because it's always 1 in that case
@@ -457,7 +457,7 @@ static int hw_support_evr_init(struct modac_hw_support_data *hw_support_data)
 					sizeof(struct evr_type_data));
 
 		} else if((hw_data->fw_version & EVR_TYPE_ADHOC_SLAC_FW_VERSION_MASK) 
-			== EVR_TYPE_ADHOC_SLAC_FW_VERSION) {
+				== EVR_TYPE_ADHOC_SLAC_FW_VERSION) {
 			
 			memcpy(&hw_data->evr_type_data, 
 					&adhoc_evr_type_slac_general, 
@@ -578,6 +578,29 @@ static int evr_set_out_map(struct modac_hw_support_data *hw_support_data,
 				map);
 
 	return 0;
+}
+
+int internal_evr_get_out_map(struct modac_hw_support_data *hw_support_data, 
+						int res_output_index)
+{
+	struct evr_hw_data *hw_data = (struct evr_hw_data *)hw_support_data->priv;
+	int evr_output_count = hw_support_data->hw_res_defs[EVR_RES_TYPE_OUTPUT].count;
+	struct evr_hw_data_out_cfg *out_cfg;
+	int rel_index;
+	
+	if(res_output_index < 0 || res_output_index >= evr_output_count) {
+		// Sanity check. These values would mean a bug in the program.
+		return -EINVAL;
+	}
+
+	out_cfg = find_out_cfg(hw_data, res_output_index, &rel_index);
+	if(out_cfg == NULL) {
+		// Sanity check. These values would mean a bug in the program.
+		return -EINVAL;
+	}
+	
+	return evr_read16(hw_support_data, 
+				out_cfg->evr_map_reg_start + rel_index * EVR_REG_OUTPUT_SLOT_SIZE);
 }
 
 static void set_pulse_params(struct modac_hw_support_data *hw_support_data,

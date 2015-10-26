@@ -121,11 +121,13 @@ int hw_support_evr_on_subscribe_change(struct modac_hw_support_data *hw_support_
 void evr_ram_map_change_flush(
 		struct modac_hw_support_data *hw_support_data);
 
+int internal_evr_get_out_map(struct modac_hw_support_data *hw_support_data, 
+						int res_output_index);
+
 u16 evr_read16(struct modac_hw_support_data *hw_support_data, int reg);
 void evr_write16(struct modac_hw_support_data *hw_support_data, int reg, u16 val);
 u32 evr_read32(struct modac_hw_support_data *hw_support_data, int reg);
 void evr_write32(struct modac_hw_support_data *hw_support_data, int reg, u32 val);
-
 
 
 #endif /* EVRMA_INTERNAL_H_ */

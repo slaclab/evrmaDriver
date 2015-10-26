@@ -159,6 +159,12 @@ ssize_t hw_support_evr_dbg_res(struct modac_hw_support_data *hw_support_data,
 			
 			n += scnprintf(buf + n, count - n, "OUT[%d]=%s[%d]", 
 					res_index, name, rel_index);
+			
+			out_map = internal_evr_get_out_map(hw_support_data, res_index);
+			if(out_map >= 0) {
+				n += scnprintf(buf + n, count - n, ",MAP=%d", out_map);
+			}
+
 		}
 	}
 	
