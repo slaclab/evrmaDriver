@@ -241,6 +241,11 @@ struct vdev_ioctl_status {
 	 * The device minor number.
 	 */
 	int minor;
+	
+	/**
+	 * the device name
+	 */
+	char name[MODAC_ID_MAX_NAME + 1];
 };
 
 /**
