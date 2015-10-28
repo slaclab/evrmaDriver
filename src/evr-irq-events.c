@@ -103,6 +103,10 @@ irqreturn_t hw_support_evr_isr(struct modac_hw_support_data *hw_support_data, vo
 			
 			if(!(stat & EVR_IRQFLAG_EVENT)) break;
 		}
+		
+		if(ilim < 1) {
+			printk(KERN_WARNING "EVR FIFO event max. read count reached.");
+		}
 	}
 
 	if(irq_flags & EVR_IRQFLAG_FIFOFULL) {
