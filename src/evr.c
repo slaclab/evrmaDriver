@@ -137,12 +137,14 @@ static const struct evr_type_data documented_evr_type_data_table[EVR_TYPE_DOCD_C
 			PULSEGEN_DATA_4x16_32_32,
 			PULSEGEN_DATA_12x0_32_16
 		},
+		
 		0, 0, 0, 16, 
 		
 		// Universal I/O is available on the external I/O box
 		8, 
 		
 		0, 0, 0, 0, 3, 16
+
 	},
 	{
 		"PXIe-EVR-300I",

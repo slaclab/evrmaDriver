@@ -8,7 +8,7 @@
 /** @file */
 
 /**
- * @defgroup g_hw_support_api API to attach the HW support to the MODAC core.
+ * @defgroup g_hw_support_api API to attach the HW support to the MODAC core
  *
  * @{
  */

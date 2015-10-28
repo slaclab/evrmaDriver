@@ -349,8 +349,7 @@ static ssize_t vdev_read(struct file *filp, char __user *buff, size_t buf_len, l
 	int count_read = 0;
 	int buf_still_free = buf_len;
 	int ret = 0;
-	
-	
+
 	/*
 	 * The devref lock can not be used here. It uses a mutex which could make
 	 * this high priority thread block by lower priority threads. A different
@@ -395,8 +394,6 @@ static ssize_t vdev_read(struct file *filp, char __user *buff, size_t buf_len, l
 			 */
 			atomic_dec(&vdev->des->activeReaderCount);
 			
-// // // // // 			modac_c_vdev_devref_unlock(vdev->des);
-			
 			/*
 			 * The system is unlocked now and a close can happen while the read
 			 * is waiting to be woken up. If the close happens
@@ -419,7 +416,6 @@ static ssize_t vdev_read(struct file *filp, char __user *buff, size_t buf_len, l
 				atomic_dec(&vdev->des->activeReaderCount);
 				return -ENODEV;
 			}
-			
 		} else {
 			
 			if(copy_to_user(buff + count_read, evbuf, n)) {
@@ -440,7 +436,7 @@ static ssize_t vdev_read(struct file *filp, char __user *buff, size_t buf_len, l
 bail:
 
 	atomic_dec(&vdev->des->activeReaderCount);
-	
+
 	return ret;
 }
 
