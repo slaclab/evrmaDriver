@@ -62,6 +62,8 @@ static void init_dev(struct vdev_data *vdev)
 	modac_cb_init(&vdev->cb_events);
 	spin_lock_init(&vdev->lock);
 	init_waitqueue_head(&vdev->wait_queue_events);
+	atomic_set(&vdev->des->readDenied, 0);
+	atomic_set(&vdev->des->activeReaderCount, 0);
 	
 	event_list_clear(&vdev->notified_events);
 }
@@ -345,10 +347,19 @@ static ssize_t vdev_read(struct file *filp, char __user *buff, size_t buf_len, l
 	struct vdev_data *vdev = (struct vdev_data *)filp->private_data;
 	int count_read = 0;
 	int buf_still_free = buf_len;
+	int ret = 0;
 	
-	int ret = modac_c_vdev_devref_lock(vdev->des);
-	if(ret) {
-		return ret;
+	
+	/*
+	 * The devref lock can not be used here. It uses a mutex which could make
+	 * this high priority thread block by lower priority threads. A different
+	 * lock is implemented instead to prevent running the code after the
+	 * VDEV destruction.
+	 */
+	atomic_inc(&vdev->des->activeReaderCount);
+	if(atomic_read(&vdev->des->readDenied)) {
+		atomic_dec(&vdev->des->activeReaderCount);
+		return -ENODEV;
 	}
 	
 	/* There must be a space for at least for one full event so it can be
@@ -379,9 +390,11 @@ static ssize_t vdev_read(struct file *filp, char __user *buff, size_t buf_len, l
 			}
 			
 			/*
-			 * The process will sleep so the devref lock must be unlocked.
+			 * The process will sleep so the devref mechanism must be unlocked.
 			 */
-			modac_c_vdev_devref_unlock(vdev->des);
+			atomic_dec(&vdev->des->activeReaderCount);
+			
+// // // // // 			modac_c_vdev_devref_unlock(vdev->des);
 			
 			/*
 			 * The system is unlocked now and a close can happen while the read
@@ -400,9 +413,10 @@ static ssize_t vdev_read(struct file *filp, char __user *buff, size_t buf_len, l
 			}
 
 			/* lock again */
-			ret = modac_c_vdev_devref_lock(vdev->des);
-			if(ret) {
-				return ret;
+			atomic_inc(&vdev->des->activeReaderCount);
+			if(atomic_read(&vdev->des->readDenied)) {
+				atomic_dec(&vdev->des->activeReaderCount);
+				return -ENODEV;
 			}
 			
 		} else {
@@ -424,7 +438,8 @@ static ssize_t vdev_read(struct file *filp, char __user *buff, size_t buf_len, l
 	
 bail:
 
-	modac_c_vdev_devref_unlock(vdev->des);
+	atomic_dec(&vdev->des->activeReaderCount);
+	
 	return ret;
 }
 

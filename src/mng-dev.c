@@ -9,6 +9,7 @@
 #include <linux/slab.h>
 #include <linux/mutex.h>
 #include <linux/version.h>
+#include <linux/delay.h>
 
 #include "devref.h"
 #include "internal.h"
@@ -119,9 +120,10 @@ static void mngdev_destroy_now(struct mngdev_data *mngdev);
  * - file close() method, in that case the 'inode' is the inode of the file
  *   and 'dev' is the device where the close() was called (can be MNG_DEV
  *   or VIRT_DEV).
+ * - vdev_des points to the VDEV descriptor in case of VIRT_DEV; it is NULL for MNG_DEV.
  */
 static void drvdat_put(struct mngdev_data *mngdev, struct inode *inode, 
-		struct device *dev, int is_vdev)
+		struct device *dev, struct modac_vdev_des *vdev_des)
 {
 	if ( 0 == devref_put( &mngdev->ref, inode ) ) {
 		/* nobody is using the reference; since it was
@@ -131,7 +133,21 @@ static void drvdat_put(struct mngdev_data *mngdev, struct inode *inode,
 		if(inode == NULL) {
 			printk(KERN_INFO "Destroying '%s' regularly\n", mngdev->des->name);
 		} else {
-			printk(KERN_INFO "HOT-UNPLUG: Destroy required '%s' from the last close(), is_vdev=%d\n", mngdev->des->name, is_vdev);
+			printk(KERN_INFO "HOT-UNPLUG: Destroy required '%s' from the last close(), vdev_des=0x%x\n", mngdev->des->name, (int)(size_t)vdev_des);
+		}
+		
+		if(vdev_des != NULL) {
+			
+			/* Notify the potential readers not to proceed with the read procedure. */
+			atomic_set(&vdev_des->readDenied, 1);
+			
+			/* 
+			* Wait untill any read procedure actually stopped before proceding to
+			* the destruction.
+			*/
+			while(atomic_read(&vdev_des->activeReaderCount) > 0) {
+				msleep(1);
+			}
 		}
 
 		mngdev_destroy_now(mngdev);
@@ -480,7 +496,7 @@ static int mngdev_release(struct inode *inode, struct file *filp)
 	/* If the reference count drops to zero
 	 * then the MNG_DEV is destroyed.
 	 */
-	drvdat_put(mngdev, inode, mngdev->dev, 0);
+	drvdat_put(mngdev, inode, mngdev->dev, NULL);
 	
 	return 0;
 }
@@ -1309,7 +1325,7 @@ void modac_c_vdev_on_close(struct modac_vdev_des *vdev_des, struct inode *inode,
 	/* If the reference count drops to zero
 	 * then the MNG_DEV is destroyed (together with the VIRT_DEVs).
 	 */
-	drvdat_put(mngdev, inode, vdev_dev, 1);
+	drvdat_put(mngdev, inode, vdev_dev, vdev_des);
 	
 }
 
@@ -1595,7 +1611,7 @@ void modac_mngdev_destroy(struct modac_mngdev_des *devdes)
 	/* drop reference count; if nobody holds the char-device
 	 * open then the 'mngdev' is free'd right here.
 	 */
-	drvdat_put(mngdev, NULL, NULL, 0);
+	drvdat_put(mngdev, NULL, NULL, NULL);
 
 	/* At this point, future file-operations on any (already
 	 * open) file which holds a reference to the unbound device
