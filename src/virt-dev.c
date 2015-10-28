@@ -247,6 +247,7 @@ static long vdev_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned lo
 
 		status.major = vdev->des->major;
 		status.minor = vdev->des->minor;
+		strncpy(status.name, vdev->des->name, MODAC_DEVICE_MAX_NAME + 1);
 		
 		ret = 0;
 		
