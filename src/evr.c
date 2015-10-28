@@ -385,6 +385,33 @@ static void evr_ram_map_init(struct modac_hw_support_data *hw_support_data)
 	evr_ram_map_change_flush(hw_support_data);
 }
 
+/*
+ * Output enable for FPGA external components / IFB-300
+ * - 0: disable outputs
+ * - 1: enable outputs
+ * 
+ * Will be effective for cPCI-EVRTG-300, PCIe-EVR-300, PXIe-EVR-300I.
+ */
+static void evr_output_enable(struct modac_hw_support_data *hw_support_data,
+							 int state)
+{
+	u32 ctrl = evr_read32(hw_support_data, EVR_REG_CTRL);
+	
+	if (state)
+		ctrl |= (1 << C_EVR_CTRL_OUTEN);
+	else
+		ctrl &= (~(1 << C_EVR_CTRL_OUTEN));
+	
+	ADBG("evr_output_enable, ctrl=0x%08x", ctrl);
+
+	evr_write32(hw_support_data, EVR_REG_CTRL, ctrl);
+	
+	ctrl = evr_read32(hw_support_data, EVR_REG_CTRL);
+	
+	ADBG("evr_output_enable2, ctrl=0x%08x", ctrl);
+	
+}
+
 static int hw_support_evr_init(struct modac_hw_support_data *hw_support_data)
 {
 	struct evr_hw_data *hw_data;
@@ -667,6 +694,12 @@ static long hw_support_evr_ioctl(struct modac_hw_support_data *hw_support_data,
 		 * Initialize the MAP RAM.
 		 */
 		evr_ram_map_init(hw_support_data);
+		
+				
+		/*
+		 * Enable any external I/O components if applicable.
+		 */
+		evr_output_enable(hw_support_data, 1);
 		
 		ret = 0;
 		

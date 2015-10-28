@@ -78,6 +78,7 @@
 #define C_EVR_CTRL_EVENT_FWD_ENA    30
 #define C_EVR_CTRL_TXLOOPBACK       29
 #define C_EVR_CTRL_RXLOOPBACK       28
+#define C_EVR_CTRL_OUTEN            27
 #define C_EVR_CTRL_SRST		        26
 #define C_EVR_CTRL_TS_CLOCK_DBUS    14
 #define C_EVR_CTRL_RESET_TIMESTAMP  13
