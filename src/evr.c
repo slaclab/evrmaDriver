@@ -789,6 +789,11 @@ static long hw_support_evr_ioctl(struct modac_hw_support_data *hw_support_data,
 	case VEVR_IOC_STATUS_GET:
 	{
 		struct vevr_ioctl_status set_arg;
+		u32 val;
+
+		val = evr_read32(hw_support_data, EVR_REG_CTRL);
+		val |= (1 << C_EVR_CTRL_LATCH_TIMESTAMP);
+		evr_write32(hw_support_data, EVR_REG_CTRL, val);
 		
 		set_arg.status.fpga_version = evr_read32(hw_support_data, EVR_REG_FW_VERSION);
 		set_arg.status.irq_flags = evr_read32(hw_support_data, EVR_REG_IRQFLAG);
