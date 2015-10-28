@@ -50,6 +50,8 @@
 #define PULSEGEN_DATA_4x16_32_24	{16, 32, 24}, {16, 32, 24}, {16, 32, 24}, {16, 32, 24}
 #define PULSEGEN_DATA_6x0_32_24		{0, 32, 24}, {0, 32, 24}, {0, 32, 24}, {0, 32, 24}, {0, 32, 24}, {0, 32, 24}
 #define PULSEGEN_DATA_12x0_32_24	PULSEGEN_DATA_6x0_32_24, PULSEGEN_DATA_6x0_32_24
+#define PULSEGEN_DATA_4x32_32_32	{32, 32, 32},  {32, 32, 32},  {32, 32, 32},  {32, 32, 32}
+#define PULSEGEN_DATA_12x32_32_32	PULSEGEN_DATA_4x32_32_32, PULSEGEN_DATA_4x32_32_32, PULSEGEN_DATA_4x32_32_32
 
 static const struct evr_type_data documented_evr_type_data_table[EVR_TYPE_DOCD_COUNT] = {
 	{
@@ -171,18 +173,25 @@ static const struct evr_type_data documented_evr_type_data_table[EVR_TYPE_DOCD_C
 
 // ------ General EVR end ------------------------------------------
 
-/* At first the FW version was 0x1fd20005, which change to
- 0x1fd00023 after the bug fix */
-// #define EVR_TYPE_ADHOC_SLAC1_FW_VERSION 0x1fd00023
-
+/* 
+ * At first the FW version was 0x1fd20005, which changed to
+ * 0x1fd00023 after the bug fix.
+ * 
+ * Let's suppose all the SLAC cards will be compatible from now on. If
+ * this is not the case more types of them may be defined later.
+ */
 #define EVR_TYPE_ADHOC_SLAC_FW_VERSION 0x1f000000
 #define EVR_TYPE_ADHOC_SLAC_FW_VERSION_MASK 0xFF000000
 
 static const struct evr_type_data adhoc_evr_type_slac_general = {
 	"EVR-SLAC-GENERAL",
-	0, // no pulsegens
-	{},
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	12,
+	{
+		PULSEGEN_DATA_12x32_32_32
+	},
+	0, 0, 0, 
+	12, // universal outputs
+	0, 0, 0, 0, 0, 0, 0
 };
 
 #define EVR_TYPE_EMCOR_FW_VERSION 0x1f000003
