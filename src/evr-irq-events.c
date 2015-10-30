@@ -37,6 +37,7 @@ irqreturn_t hw_support_evr_isr(struct modac_hw_support_data *hw_support_data, vo
 		
         if(irq_flags_no_fifo_full){
 			evr_write32(hw_support_data, EVR_REG_IRQFLAG, irq_flags_no_fifo_full);
+			evr_write32(hw_support_data, EVR_REG_IRQFLAG, 0); // for SLAC card
 			barrier();
 		}
 	}
@@ -117,6 +118,7 @@ irqreturn_t hw_support_evr_isr(struct modac_hw_support_data *hw_support_data, vo
 		evr_write32(hw_support_data, EVR_REG_CTRL, ctrl);
 
 		evr_write32(hw_support_data, EVR_REG_IRQFLAG, EVR_IRQFLAG_FIFOFULL);
+		evr_write32(hw_support_data, EVR_REG_IRQFLAG, 0); // for SLAC card
 		
 		modac_mngdev_notify(devdes, EVRMA_EVENT_ERROR_LOST);
 		
