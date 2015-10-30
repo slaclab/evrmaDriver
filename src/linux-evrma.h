@@ -287,6 +287,16 @@ struct vevr_ioctl_status {
  */
 #define VEVR_IOC_STATUS_GET	\
 	_IOWR(VIRT_DEV_IOC_MAGIC, VIRT_DEV_HW_IOC_MIN + 8, struct vevr_ioctl_status)
+	
+/**
+ * Reads the value of the latched timestamp. This call is direct (no mutex
+ * locking, no sleeping, and is therefore suitable to be called from high 
+ * priority threads).
+ */
+#define VEVR_IOC_LATCHED_TIMESTAMP_GET	\
+	_IOWR(VIRT_DEV_IOC_MAGIC, VIRT_DEV_HW_DIRECT_IOC_MIN + 0, uint32_t)
+
+
 
 /**
  * The DataBuf data for one message.

@@ -172,17 +172,13 @@ static int vdev_release(struct inode *inode, struct file *filp)
 static long vdev_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
 	struct vdev_data *vdev = (struct vdev_data *)filp->private_data;
-	int ret;
+	int ret = 0;
 	
-	ret = modac_c_vdev_devref_lock(vdev->des);
-	if(ret) {
-		return ret;
-	}
+// // // // // // // #ifdef DBG_MEASURE_TIME_FROM_IRQ_TO_USER
 
 	/* Check that cmd is valid */
 	if (_IOC_TYPE(cmd) != VIRT_DEV_IOC_MAGIC) {
-		ret = -ENOTTY;
-		goto bail;
+		return -ENOTTY;
 	}
 	
 	/* Check access */
@@ -196,8 +192,55 @@ static long vdev_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned lo
 		return -EFAULT;
 	}
 	
+	
+	if (_IOC_NR(cmd) >= VIRT_DEV_HW_DIRECT_IOC_MIN &&
+			   _IOC_NR(cmd) <= VIRT_DEV_HW_DIRECT_IOC_MAX) {
+		
+		if(cmd == VEVR_IOC_LATCHED_TIMESTAMP_GET) {
+			
+			u32 val;
+		
+			/* 
+			* Direct HW calls are not protected by a mutex so they have to be
+			* protected by this mechanism.
+			*/
+			atomic_inc(&vdev->des->activeReaderCount);
+			if(atomic_read(&vdev->des->readDenied)) {
+				atomic_dec(&vdev->des->activeReaderCount);
+				return -ENODEV;
+			}
+			
+			{
+				u32 get_unprotected_timestamp_latch(struct modac_vdev_des *vdev_des);
+				val = get_unprotected_timestamp_latch(vdev->des);
+			}
+			
+			atomic_dec(&vdev->des->activeReaderCount);
+			
+			if (copy_to_user((void *)arg, &val, sizeof(u32))) {
+				return -EFAULT;
+			}
+			
+			return 0;
+			
+		} else {
+			
+			return -ENOSYS;
+			
+		}
+	}
+
+	/* Start of the mutex locked code.
+	 */
+	ret = modac_c_vdev_devref_lock(vdev->des);
+	if(ret) {
+		return ret;
+	}
+	
 	if (_IOC_NR(cmd) <= VIRT_DEV_IOC_MAX) {
-		// general range; continue after this if
+		
+		/* general range; no used IOCTL numbers here */
+		
 	} else if (_IOC_NR(cmd) >= VIRT_DEV_HW_IOC_MIN &&
 			   _IOC_NR(cmd) <= VIRT_DEV_HW_IOC_MAX) {
 		// HW specific range

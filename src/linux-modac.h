@@ -171,7 +171,14 @@ struct mngdev_config {
  * Must have its own range; the actuall IOCTLS will be defined in linux-evrma.h
  */
 #define MNG_DEV_HW_IOC_MIN  		128
-#define MNG_DEV_HW_IOC_MAX  		239
+#define MNG_DEV_HW_IOC_MAX  		209
+
+/*
+ * Must have its own range; the actuall direct IOCTLS will be defined 
+ * in linux-evrma.h.
+ */
+#define VIRT_DEV_HW_DIRECT_IOC_MIN  		210
+#define VIRT_DEV_HW_DIRECT_IOC_MAX  		239
 
 
 /* ---------- dbg ioctls ------------ */
