@@ -145,6 +145,7 @@ int hw_support_evr_on_subscribe_change(struct modac_hw_support_data *hw_support_
 	struct modac_mngdev_des *devdes = hw_support_data->mngdev_des;
 	struct evr_hw_data *hw_data = (struct evr_hw_data *)hw_support_data->priv;
 	int evst;
+	u32 irq_enable_prev;
 	u32 irq_enable;
 	int interrupts_needed;
 
@@ -159,8 +160,10 @@ int hw_support_evr_on_subscribe_change(struct modac_hw_support_data *hw_support_
 		devdes->irq_set(devdes, interrupts_needed);
 	}
 	
-	// we have to read this not to change bits belonging to the lower system 
-	irq_enable = evr_read32(hw_support_data, EVR_REG_IRQEN) & (1 << C_EVR_IRQ_PCIEE);
+	irq_enable_prev = evr_read32(hw_support_data, EVR_REG_IRQEN);
+	
+	// we have to set this not to change bits belonging to the lower system 
+	irq_enable = irq_enable_prev & (1 << C_EVR_IRQ_PCIEE);
 	
 
 	if(interrupts_needed) {
@@ -201,13 +204,26 @@ int hw_support_evr_on_subscribe_change(struct modac_hw_support_data *hw_support_
 
 	// is DataBuff needed?
 	evst = event_list_test(subscriptions, EVRMA_EVENT_DBUF_DATA);
-	evr_write32(hw_support_data, EVR_REG_DATA_BUF_CTRL, evst ? 
-			((1 << C_EVR_DATABUF_MODE) | (1 << C_EVR_DATABUF_LOAD)): (1 << C_EVR_DATABUF_STOP));
 	
 	if(evst) {
+		
+		if((irq_enable_prev & EVR_IRQFLAG_DATABUF) == 0) {
+		
+			/* On DataBuf start this must be written. When the DataBuf
+			 * is already running this mustn't be touched because it
+			 * influences the DataBuf IRQ triggering and would spoil the
+			 * interrupts for other VEVRs if present.
+			 */
+			evr_write32(hw_support_data, EVR_REG_DATA_BUF_CTRL,
+					(1 << C_EVR_DATABUF_MODE) | (1 << C_EVR_DATABUF_LOAD));
+		}
+		
 		irq_enable |= EVR_IRQFLAG_DATABUF;
+	} else {
+		evr_write32(hw_support_data, EVR_REG_DATA_BUF_CTRL,
+				(1 << C_EVR_DATABUF_STOP));
 	}
-	
+
 	// other statuses
 	
 	evst = event_list_test(subscriptions, EVRMA_EVENT_ERROR_TAXI);
@@ -230,8 +246,10 @@ int hw_support_evr_on_subscribe_change(struct modac_hw_support_data *hw_support_
 		irq_enable |= EVR_IRQFLAG_FIFOFULL;
 	}
 
-	// set the combined irq enabling mask
-	evr_write32(hw_support_data, EVR_REG_IRQEN, irq_enable);
+	if(irq_enable_prev != irq_enable) {
+		// set the combined irq enabling mask
+		evr_write32(hw_support_data, EVR_REG_IRQEN, irq_enable);
+	}
 	
 	return 0;
 }
