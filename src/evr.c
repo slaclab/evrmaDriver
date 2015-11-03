@@ -1067,11 +1067,12 @@ static long hw_support_evr_ioctl(struct modac_hw_support_data *hw_support_data,
 		
 		if(event_count == 1) {
 			
-			if(!reading) {
-				if (copy_from_user(&pulse_map_ram1, (void *)arg, 
-							sizeof(struct vevr_ioctl_pulse_map_ram_for_event))) {
-					return -EFAULT;
-				}
+			/* copy from user space for read, too; the event code to be read
+			 * is there.
+			 */
+			if (copy_from_user(&pulse_map_ram1, (void *)arg, 
+						sizeof(struct vevr_ioctl_pulse_map_ram_for_event))) {
+				return -EFAULT;
 			}
 			
 			event_first = pulse_map_ram1.event_code;
@@ -1125,6 +1126,7 @@ static long hw_support_evr_ioctl(struct modac_hw_support_data *hw_support_data,
 				}
 				
 			} else {
+				
 				if(map[i] & (1 << EVR_PULSE_CFG_BIT_CLEAR)) {
 					*clr32 |= pulse_mask;
 				} else {
