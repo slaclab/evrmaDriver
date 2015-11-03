@@ -35,11 +35,21 @@ static ssize_t show_map_ram_bits(struct modac_hw_support_data *hw_support_data,
 	ssize_t n = 0;
 	u32 rval;
 
+	n += scnprintf(buf + n, count - n, "MapRam[%d],bit=%d:", mapram, bit);
+	
 	for(i = EVRMA_FIFO_MIN_EVENT_CODE; i  <= EVRMA_FIFO_MAX_EVENT_CODE; i ++) {
 		u32 ram_start = (mapram ? EVR_REG_MAPRAM2 : EVR_REG_MAPRAM1) +
 					i * EVR_REG_MAPRAM_SLOT_SIZE;
+		int bit_val;
 		rval = evr_read32(hw_support_data, ram_start + 4 * (3 - (bit / 32)));
-		n += scnprintf(buf + n, count - n, "%d", (rval >> (bit % 32)) & 1);
+
+// 		n += scnprintf(buf + n, count - n, "%d", (rval >> (bit % 32)) & 1);
+
+		// instead of printing out 0/1 string the 1 bit numbers are output
+		bit_val =  (rval >> (bit % 32)) & 1;
+		if(bit_val) {
+			n += scnprintf(buf + n, count - n, "%d ", i);
+		}
 	}
 	
 	n += scnprintf(buf + n, count - n, "\n");
@@ -50,9 +60,14 @@ static ssize_t show_map_ram_bits(struct modac_hw_support_data *hw_support_data,
 ssize_t hw_support_evr_show_dbg(struct modac_hw_support_data *hw_support_data, 
 						char *buf, size_t count)
 {
+	struct evr_hw_data *hw_data = (struct evr_hw_data *)hw_support_data->priv;
 	ssize_t n = 0;
 	u32 rval;
 
+	if(hw_data->sim != NULL) {
+		return n;
+	}
+	
 	rval = evr_read32(hw_support_data, EVR_REG_CTRL);
 	n += scnprintf(buf + n, count - n, "CTRL[MASTER_ENABLE]=%d\n", 
 				  (rval >> C_EVR_CTRL_MASTER_ENABLE) & 1);
@@ -143,6 +158,7 @@ ssize_t hw_support_evr_dbg_res(struct modac_hw_support_data *hw_support_data,
 			
 			const char *name;
 			int rel_index;
+			int out_map;
 			
 			if(res_index < hw_data->out_cfg[EVR_OUT_TYPE_FP_TTL].res_start +
 					hw_data->out_cfg[EVR_OUT_TYPE_FP_TTL].res_count) {
@@ -216,7 +232,7 @@ ssize_t hw_support_evr_dbg_regs(struct modac_hw_support_data *hw_support_data,
 	ssize_t n = 0;
 	
 	if(hw_data->sim != NULL) {
-		n += scnprintf(buf + n, count - n, "XX");
+		n += scnprintf(buf + n, count - n, "no_regs");
 	} else {
 		n += print_regs(hw_support_data, buf + n, count - n, regs_offset, regs_length);
 	}
