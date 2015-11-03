@@ -413,14 +413,9 @@ static void evr_output_enable(struct modac_hw_support_data *hw_support_data,
 	else
 		ctrl &= (~(1 << C_EVR_CTRL_OUTEN));
 	
-	ADBG("evr_output_enable, ctrl=0x%08x", ctrl);
-
 	evr_write32(hw_support_data, EVR_REG_CTRL, ctrl);
 	
 	ctrl = evr_read32(hw_support_data, EVR_REG_CTRL);
-	
-	ADBG("evr_output_enable2, ctrl=0x%08x", ctrl);
-	
 }
 
 static int hw_support_evr_init(struct modac_hw_support_data *hw_support_data)
