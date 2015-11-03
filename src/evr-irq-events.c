@@ -16,11 +16,30 @@
 #include "evr-sim.h"
 #include "linux-evrma.h"
 
+#ifdef DBG_MEASURE_TIME_FROM_IRQ_TO_USER
+
+u32 dbg_get_time(struct modac_hw_support_data *hw_support_data)
+{
+	u32 val;
+	
+	val = evr_read32(hw_support_data, EVR_REG_CTRL);
+	val |= (1 << C_EVR_CTRL_LATCH_TIMESTAMP);
+	evr_write32(hw_support_data, EVR_REG_CTRL, val);
+	
+	return evr_read32(hw_support_data, EVR_REG_TIMESTAMP_LATCH);
+}
+
+#endif
+
 irqreturn_t hw_support_evr_isr(struct modac_hw_support_data *hw_support_data, void *data)
 {
 	struct modac_mngdev_des *devdes = hw_support_data->mngdev_des;
 	struct evr_hw_data *hw_data = (struct evr_hw_data *)hw_support_data->priv;
 	
+#ifdef DBG_MEASURE_TIME_FROM_IRQ_TO_USER
+	u32 arrival_time = dbg_get_time(hw_support_data);
+#endif
+			
 	/*
 	At this point we examine and process the registers and create events.
 	The events are dispatched by calling modac_mngdev_notify/modac_device_put_event.
@@ -97,6 +116,10 @@ irqreturn_t hw_support_evr_isr(struct modac_hw_support_data *hw_support_data, vo
 			int event = evr_read32(hw_support_data, EVR_REG_FIFO_EVENT) & 0xFF;
 			et_data.seconds = evr_read32(hw_support_data, EVR_REG_FIFO_SECONDS);
 			et_data.timestamp = evr_read32(hw_support_data, EVR_REG_FIFO_TIMESTAMP);
+
+#ifdef DBG_MEASURE_TIME_FROM_IRQ_TO_USER
+			et_data.dbg_timestamp[0] = arrival_time;
+#endif
 
 			modac_mngdev_put_event(devdes, event, &et_data, sizeof(et_data));
 			

@@ -8,11 +8,19 @@
 
 #define CBUF_EVENT_COUNT 1024 /* must be a power of 2 */
 
+#ifdef DBG_MEASURE_TIME_FROM_IRQ_TO_USER
+	
+#define CBUF_EVENT_ENTRY_DATA_LENGTH 28
+
+#else
+
 /* 
  * Up to 3 words of data allowed. Note that the struct modac_circ_buf_entry
  * will have 4 words in total.
  */
 #define CBUF_EVENT_ENTRY_DATA_LENGTH 12
+	
+#endif
 
 struct modac_circ_buf_entry {
 	/*

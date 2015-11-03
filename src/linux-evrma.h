@@ -3,6 +3,9 @@
 
 #include "linux-modac.h"
 
+// #define DBG_MEASURE_TIME_FROM_IRQ_TO_USER
+
+
 /** @file */
 
 /**
@@ -215,10 +218,6 @@ struct vevr_status {
 	 * The Seconds Shift register value.
 	 */
 	uint32_t seconds_shift;
-	/**
-	 * The Timestamp Latch register value.
-	 */
-	uint32_t timestamp_latch;
 };
 
 /**
@@ -383,6 +382,10 @@ struct evr_data_fifo_event {
 	 * The read value of the FIFO Timestamp Register.
 	 */
 	uint32_t timestamp;
+	
+#ifdef DBG_MEASURE_TIME_FROM_IRQ_TO_USER
+	uint32_t dbg_timestamp[5];
+#endif
 };
 
 /** @} */

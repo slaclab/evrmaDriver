@@ -1287,6 +1287,22 @@ void modac_c_vdev_init_res(struct modac_vdev_des *vdev_des)
 	}
 }
 
+#ifdef DBG_MEASURE_TIME_FROM_IRQ_TO_USER
+
+u32 mng_dbg_get_time(struct modac_vdev_des *vdev_des)
+{
+	struct modac_mngdev_des *devdes = vdev_des->mngdev_des;
+	struct mngdev_data *mngdev = (struct mngdev_data *)devdes->priv;
+	struct modac_hw_support_data *hw_support_data = 
+				&mngdev->hw_support_data;
+				
+	return dbg_get_time(hw_support_data);
+}
+
+#endif
+
+
+
 void modac_c_vdev_on_close(struct modac_vdev_des *vdev_des, struct inode *inode, struct device *vdev_dev)
 {
 	struct modac_mngdev_des *devdes = vdev_des->mngdev_des;

@@ -174,8 +174,6 @@ static long vdev_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned lo
 	struct vdev_data *vdev = (struct vdev_data *)filp->private_data;
 	int ret = 0;
 	
-// // // // // // // #ifdef DBG_MEASURE_TIME_FROM_IRQ_TO_USER
-
 	/* Check that cmd is valid */
 	if (_IOC_TYPE(cmd) != VIRT_DEV_IOC_MAGIC) {
 		return -ENOTTY;
@@ -461,6 +459,14 @@ static ssize_t vdev_read(struct file *filp, char __user *buff, size_t buf_len, l
 			}
 		} else {
 			
+#ifdef DBG_MEASURE_TIME_FROM_IRQ_TO_USER
+	{
+		u32 t = mng_dbg_get_time(vdev->des);
+		// dbg_timestamp[2]  is at 2 + 2*4 + 2*4
+		memcpy(evbuf + 18, &t, 4);
+	}
+#endif
+
 			if(copy_to_user(buff + count_read, evbuf, n)) {
 				printk(KERN_ERR 
 					"'copy_to_user' failed while reading the EVRMA data. "
@@ -593,6 +599,13 @@ void modac_vdev_put_cb(struct modac_vdev_des *vdev_des, int event, void *data, i
 {
 	struct vdev_data *vdev = (struct vdev_data *)vdev_des->priv;
 	
+#ifdef DBG_MEASURE_TIME_FROM_IRQ_TO_USER
+	{
+		struct evr_data_fifo_event *et_data = data;
+		et_data->dbg_timestamp[1] = mng_dbg_get_time(vdev_des);
+	}
+#endif
+			
 	if(modac_cb_put(&vdev->cb_events, 
 			event, data, length, &vdev->wait_queue_events) < 0) {
 		

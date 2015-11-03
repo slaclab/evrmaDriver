@@ -26,6 +26,22 @@ int evrma_pci_init(int major, int minor_start);
 void evrma_pci_fini(void);
 
 
+// -------- Temporary stuff ------------------
+
+#include "linux-evrma.h" // here it is defined for the testing to be everywhere possible
+
+#ifdef DBG_MEASURE_TIME_FROM_IRQ_TO_USER
+
+struct modac_hw_support_data;
+u32 dbg_get_time(struct modac_hw_support_data *hw_support_data);
+
+struct modac_vdev_des;
+u32 mng_dbg_get_time(struct modac_vdev_des *vdev_des);
+
+#endif
+
+
+
 #endif /* MODAC_INTERNAL_H_ */
 
 
