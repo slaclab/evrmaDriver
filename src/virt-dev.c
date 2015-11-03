@@ -31,7 +31,8 @@ struct vdev_data {
 	struct event_list_type notified_events;
 	struct modac_circ_buf cb_events;
 	
-	spinlock_t	lock;
+	/* This lock is not used in the interrupts. */
+	spinlock_t	cb_reader_lock;
 	wait_queue_head_t wait_queue_events;
 };
 
@@ -60,7 +61,7 @@ static struct mutex    vdev_table_mutex;
 static void init_dev(struct vdev_data *vdev)
 {
 	modac_cb_init(&vdev->cb_events);
-	spin_lock_init(&vdev->lock);
+	spin_lock_init(&vdev->cb_reader_lock);
 	init_waitqueue_head(&vdev->wait_queue_events);
 	atomic_set(&vdev->des->readDenied, 0);
 	atomic_set(&vdev->des->activeReaderCount, 0);
@@ -168,6 +169,8 @@ static int vdev_release(struct inode *inode, struct file *filp)
 
 	return 0;
 }
+
+static int read_has_data(struct vdev_data *vdev);
 
 static long vdev_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
@@ -334,15 +337,21 @@ static int read_has_data(struct vdev_data *vdev)
 {
 	int ret = 0;
 	
-	spin_lock(&vdev->lock);
-	
+	spin_lock(&vdev->cb_reader_lock);
 	if(modac_cb_available(&vdev->cb_events)) {
 		ret = 1;
-	} else if(!event_list_is_empty(&vdev->notified_events)) {
+	}
+	spin_unlock(&vdev->cb_reader_lock);
+	
+	if(ret)
+		return ret;
+	
+	
+	modac_c_vdev_spin_lock(vdev->des);
+	if(!event_list_is_empty(&vdev->notified_events)) {
 		ret = 1;
 	}
-	
-	spin_unlock(&vdev->lock);
+	modac_c_vdev_spin_unlock(vdev->des);	
 	
 	return ret;
 }
@@ -360,14 +369,14 @@ static int read_get(struct vdev_data *vdev, u8 *buf)
 	/*
 	 * First see if there's a notifying event available.
 	 */
-	spin_lock(&vdev->lock);
+	modac_c_vdev_spin_lock(vdev->des);
 
 	event = event_list_extract_one(&vdev->notified_events);
 	if(event >= 0) {
 		event_list_remove(&vdev->notified_events, event);
 	}
 
-	spin_unlock(&vdev->lock);
+	modac_c_vdev_spin_unlock(vdev->des);
 	
 	if(event >= 0) {
 		u16 event16 = (u16)event;
@@ -376,9 +385,9 @@ static int read_get(struct vdev_data *vdev, u8 *buf)
 	}
 	
 	/* If no notifying event extract the normal event if any. */
-	spin_lock(&vdev->lock);
+	spin_lock(&vdev->cb_reader_lock);
 	ret = modac_cb_get(&vdev->cb_events, buf);
-	spin_unlock(&vdev->lock);
+	spin_unlock(&vdev->cb_reader_lock);
 	
 	return ret;
 }
@@ -584,7 +593,7 @@ static const struct file_operations vdev_fops = {
 };
 
 
-/* Called from an IRQ in a protected context. */
+/* Called from an IRQ in a spin-lock protected context. */
 void modac_vdev_notify(struct modac_vdev_des *vdev_des, int event)
 {
 	struct vdev_data *vdev = (struct vdev_data *)vdev_des->priv;

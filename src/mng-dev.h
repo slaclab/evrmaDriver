@@ -80,6 +80,9 @@ void modac_c_vdev_on_close(struct modac_vdev_des *vdev_des, struct inode *inode,
 int modac_c_vdev_devref_lock(struct modac_vdev_des *vdev_des);
 void modac_c_vdev_devref_unlock(struct modac_vdev_des *vdev_des);
 
+void modac_c_vdev_spin_lock(struct modac_vdev_des *vdev_des);
+void modac_c_vdev_spin_unlock(struct modac_vdev_des *vdev_des);
+
 int modac_c_vdev_do_ioctl(
 		struct modac_vdev_des *vdev_des,
 		struct mngdev_ioctl_hw_header_vres *vres,

@@ -1227,6 +1227,22 @@ void modac_mngdev_notify(struct modac_mngdev_des *devdes, int event)
 
 
 
+void modac_c_vdev_spin_lock(struct modac_vdev_des *vdev_des)
+{
+	struct modac_mngdev_des *devdes = vdev_des->mngdev_des;
+	struct mngdev_data *mngdev = (struct mngdev_data *)devdes->priv;
+	
+	return dev_spin_lock(mngdev);
+}
+
+void modac_c_vdev_spin_unlock(struct modac_vdev_des *vdev_des)
+{
+	struct modac_mngdev_des *devdes = vdev_des->mngdev_des;
+	struct mngdev_data *mngdev = (struct mngdev_data *)devdes->priv;
+	
+	dev_spin_unlock(mngdev);
+}
+
 int modac_c_vdev_devref_lock(struct modac_vdev_des *vdev_des)
 {
 	struct modac_mngdev_des *devdes = vdev_des->mngdev_des;
