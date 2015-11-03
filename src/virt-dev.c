@@ -197,38 +197,21 @@ static long vdev_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned lo
 	if (_IOC_NR(cmd) >= VIRT_DEV_HW_DIRECT_IOC_MIN &&
 			   _IOC_NR(cmd) <= VIRT_DEV_HW_DIRECT_IOC_MAX) {
 		
-		if(cmd == VEVR_IOC_LATCHED_TIMESTAMP_GET) {
-			
-			u32 val;
-		
-			/* 
-			* Direct HW calls are not protected by a mutex so they have to be
-			* protected by this mechanism.
-			*/
-			atomic_inc(&vdev->des->activeReaderCount);
-			if(atomic_read(&vdev->des->readDenied)) {
-				atomic_dec(&vdev->des->activeReaderCount);
-				return -ENODEV;
-			}
-			
-			{
-				u32 get_unprotected_timestamp_latch(struct modac_vdev_des *vdev_des);
-				val = get_unprotected_timestamp_latch(vdev->des);
-			}
-			
+		/* 
+		 * Direct HW calls are not protected by a mutex so they have to be
+		 * protected by this mechanism.
+		 */
+		atomic_inc(&vdev->des->activeReaderCount);
+		if(atomic_read(&vdev->des->readDenied)) {
 			atomic_dec(&vdev->des->activeReaderCount);
-			
-			if (copy_to_user((void *)arg, &val, sizeof(u32))) {
-				return -EFAULT;
-			}
-			
-			return 0;
-			
-		} else {
-			
-			return -ENOSYS;
-			
+			return -ENODEV;
 		}
+		
+		ret = modac_c_vdev_do_direct_ioctl(vdev->des, cmd, arg);
+
+		atomic_dec(&vdev->des->activeReaderCount);
+		
+		return ret;
 	}
 
 	/* Start of the mutex locked code.
@@ -502,9 +485,15 @@ static unsigned int vdev_poll(struct file *filp, poll_table *wait)
 {
 	struct vdev_data *vdev = (struct vdev_data *)filp->private_data;
 
-	int ret = modac_c_vdev_devref_lock(vdev->des);
-	if(ret) {
-		return ret;
+	int ret = 0;
+	
+	/* The poll() is, like read(), called from the high-priority thread and 
+	 * must not use the mutexes to lock.
+	 */
+	atomic_inc(&vdev->des->activeReaderCount);
+	if(atomic_read(&vdev->des->readDenied)) {
+		atomic_dec(&vdev->des->activeReaderCount);
+		return -ENODEV;
 	}
 
 	poll_wait(filp, &vdev->wait_queue_events, wait);
@@ -512,7 +501,8 @@ static unsigned int vdev_poll(struct file *filp, poll_table *wait)
 		ret = POLLIN | POLLRDNORM;
 	}
 	
-	modac_c_vdev_devref_unlock(vdev->des);
+	atomic_dec(&vdev->des->activeReaderCount);
+	
 	return ret;
 }
 

@@ -105,6 +105,17 @@ struct modac_hw_support_def {
 						struct modac_rm_vres_desc *resources,
 						unsigned int cmd, unsigned long arg);
 	
+	/**
+	 * A IOCTL function that is called mutex unprotected. Hence only safe
+	 * operations to the hardware can be done which do not interefere with
+	 * other operations.
+	 * Can be NULL.
+	 * This function is meant to be called from the MNG_DEV as well as from 
+	 * the VIRT_DEV (therefore, with different IOCTL MAGIC ranges).
+	 */
+	long (*direct_ioctl)(struct modac_hw_support_data *hw_support_data,
+						unsigned int cmd, unsigned long arg);
+	
 	
 	/**
 	 * Can be NULL. Returns region(s) to be mmap-ed readonly from the VIRT_DEV.

@@ -88,6 +88,10 @@ int modac_c_vdev_do_ioctl(
 		struct mngdev_ioctl_hw_header_vres *vres,
 		unsigned int cmd, unsigned long arg);
 
+int modac_c_vdev_do_direct_ioctl(
+		struct modac_vdev_des *vdev_des,
+		unsigned int cmd, unsigned long arg);
+
 int modac_c_vdev_subscribe(struct modac_vdev_des *vdev_des, 
 					int event, 
 					// one of VIRT_DEV_IOCTL_SUBSCRIBE_ACTION_...

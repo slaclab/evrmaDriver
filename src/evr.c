@@ -653,6 +653,45 @@ static void set_pulse_params(struct modac_hw_support_data *hw_support_data,
 								width);
 }
 
+
+
+static long hw_support_evr_direct_ioctl(struct modac_hw_support_data *hw_support_data, 
+				unsigned int cmd, unsigned long arg)
+{
+	int ret;
+	
+	ret = -ENOSYS;
+	
+	switch(cmd) {
+		
+	case VEVR_IOC_LATCHED_TIMESTAMP_GET:
+	{
+		u32 val;
+
+		val = evr_read32(hw_support_data, EVR_REG_CTRL);
+		val |= (1 << C_EVR_CTRL_LATCH_TIMESTAMP);
+		evr_write32(hw_support_data, EVR_REG_CTRL, val);
+		
+		val = evr_read32(hw_support_data, EVR_REG_TIMESTAMP_LATCH);
+
+		if (copy_to_user((void *)arg, &val, sizeof(u32))) {
+			return -EFAULT;
+		}
+		
+		ret = 0;
+		break;
+	}
+	
+	} // switch
+	
+	return ret;
+}
+
+
+		
+		
+		
+
 static long hw_support_evr_ioctl(struct modac_hw_support_data *hw_support_data, 
 				struct modac_vdev_des *vdev_des,
 				struct modac_rm_vres_desc *resources, 
@@ -791,16 +830,10 @@ static long hw_support_evr_ioctl(struct modac_hw_support_data *hw_support_data,
 	case VEVR_IOC_STATUS_GET:
 	{
 		struct vevr_ioctl_status set_arg;
-		u32 val;
-
-		val = evr_read32(hw_support_data, EVR_REG_CTRL);
-		val |= (1 << C_EVR_CTRL_LATCH_TIMESTAMP);
-		evr_write32(hw_support_data, EVR_REG_CTRL, val);
 		
 		set_arg.status.fpga_version = evr_read32(hw_support_data, EVR_REG_FW_VERSION);
 		set_arg.status.irq_flags = evr_read32(hw_support_data, EVR_REG_IRQFLAG);
 		set_arg.status.seconds_shift = evr_read32(hw_support_data, EVR_REG_SECONDS_SHIFT);
-		set_arg.status.timestamp_latch = evr_read32(hw_support_data, EVR_REG_TIMESTAMP_LATCH);
 		
 		if (copy_to_user((void *)arg, &set_arg, 
 					sizeof(struct vevr_ioctl_status))) {
@@ -1203,6 +1236,7 @@ struct modac_hw_support_def hw_support_evr = {
 	end: hw_support_evr_end,
 	isr: hw_support_evr_isr,
 	ioctl: hw_support_evr_ioctl,
+	direct_ioctl: hw_support_evr_direct_ioctl,
 	on_subscribe_change: hw_support_evr_on_subscribe_change,
 	init_res: hw_support_evr_init_res,
 	vdev_mmap_ro: hw_support_evr_vdev_mmap_ro,
@@ -1212,3 +1246,4 @@ struct modac_hw_support_def hw_support_evr = {
 	dbg_regs: hw_support_evr_dbg_regs,
 	dbg_info: hw_support_evr_dbg_info,
 };
+

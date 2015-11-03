@@ -1396,6 +1396,24 @@ bail:
 	return ret;
 }
 
+int modac_c_vdev_do_direct_ioctl(
+		struct modac_vdev_des *vdev_des,
+		unsigned int cmd, unsigned long arg)
+{
+	struct modac_mngdev_des *devdes = vdev_des->mngdev_des;
+	struct mngdev_data *mngdev = (struct mngdev_data *)devdes->priv;
+	int ret;
+	
+	if(devdes->hw_support->direct_ioctl == NULL) {
+		ret = -ENOSYS;
+	} else {
+		ret = devdes->hw_support->direct_ioctl(
+			&mngdev->hw_support_data, cmd, arg);
+	}
+	
+	return ret;
+}
+
 int modac_c_vdev_subscribe(struct modac_vdev_des *vdev_des,
 					int event, 
 					u8 action)
@@ -1780,6 +1798,4 @@ void modac_mngdev_fini(void)
 {
 	cleanup_sys(CLEAN_SYS_ALL);
 }
-
-
 
