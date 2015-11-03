@@ -40,8 +40,12 @@ struct modac_vdev_des {
 	 */
 	int usage_counter;
 	
-	atomic_t activeReaderCount;
-	atomic_t readDenied;
+	/*
+	 * The 'direct access' means no devref mutex protection is used. This
+	 * protects only against the hot-unplug events.
+	 */
+	atomic_t activeDirectAccessCount;
+	atomic_t directAccessDenied;
 	
 	/*
 	 * If non-zero the HW will not be cleared after the last VIRT_DEV close().

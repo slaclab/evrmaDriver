@@ -63,8 +63,8 @@ static void init_dev(struct vdev_data *vdev)
 	modac_cb_init(&vdev->cb_events);
 	spin_lock_init(&vdev->cb_reader_lock);
 	init_waitqueue_head(&vdev->wait_queue_events);
-	atomic_set(&vdev->des->readDenied, 0);
-	atomic_set(&vdev->des->activeReaderCount, 0);
+	atomic_set(&vdev->des->directAccessDenied, 0);
+	atomic_set(&vdev->des->activeDirectAccessCount, 0);
 	
 	event_list_clear(&vdev->notified_events);
 }
@@ -201,15 +201,15 @@ static long vdev_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned lo
 		 * Direct HW calls are not protected by a mutex so they have to be
 		 * protected by this mechanism.
 		 */
-		atomic_inc(&vdev->des->activeReaderCount);
-		if(atomic_read(&vdev->des->readDenied)) {
-			atomic_dec(&vdev->des->activeReaderCount);
+		atomic_inc(&vdev->des->activeDirectAccessCount);
+		if(atomic_read(&vdev->des->directAccessDenied)) {
+			atomic_dec(&vdev->des->activeDirectAccessCount);
 			return -ENODEV;
 		}
 		
 		ret = modac_c_vdev_do_direct_ioctl(vdev->des, cmd, arg);
 
-		atomic_dec(&vdev->des->activeReaderCount);
+		atomic_dec(&vdev->des->activeDirectAccessCount);
 		
 		return ret;
 	}
@@ -389,9 +389,9 @@ static ssize_t vdev_read(struct file *filp, char __user *buff, size_t buf_len, l
 	 * lock is implemented instead to prevent running the code after the
 	 * VDEV destruction.
 	 */
-	atomic_inc(&vdev->des->activeReaderCount);
-	if(atomic_read(&vdev->des->readDenied)) {
-		atomic_dec(&vdev->des->activeReaderCount);
+	atomic_inc(&vdev->des->activeDirectAccessCount);
+	if(atomic_read(&vdev->des->directAccessDenied)) {
+		atomic_dec(&vdev->des->activeDirectAccessCount);
 		return -ENODEV;
 	}
 	
@@ -425,7 +425,7 @@ static ssize_t vdev_read(struct file *filp, char __user *buff, size_t buf_len, l
 			/*
 			 * The process will sleep so the devref mechanism must be unlocked.
 			 */
-			atomic_dec(&vdev->des->activeReaderCount);
+			atomic_dec(&vdev->des->activeDirectAccessCount);
 			
 			/*
 			 * The system is unlocked now and a close can happen while the read
@@ -444,9 +444,9 @@ static ssize_t vdev_read(struct file *filp, char __user *buff, size_t buf_len, l
 			}
 
 			/* lock again */
-			atomic_inc(&vdev->des->activeReaderCount);
-			if(atomic_read(&vdev->des->readDenied)) {
-				atomic_dec(&vdev->des->activeReaderCount);
+			atomic_inc(&vdev->des->activeDirectAccessCount);
+			if(atomic_read(&vdev->des->directAccessDenied)) {
+				atomic_dec(&vdev->des->activeDirectAccessCount);
 				return -ENODEV;
 			}
 		} else {
@@ -476,7 +476,7 @@ static ssize_t vdev_read(struct file *filp, char __user *buff, size_t buf_len, l
 	
 bail:
 
-	atomic_dec(&vdev->des->activeReaderCount);
+	atomic_dec(&vdev->des->activeDirectAccessCount);
 
 	return ret;
 }
@@ -490,9 +490,9 @@ static unsigned int vdev_poll(struct file *filp, poll_table *wait)
 	/* The poll() is, like read(), called from the high-priority thread and 
 	 * must not use the mutexes to lock.
 	 */
-	atomic_inc(&vdev->des->activeReaderCount);
-	if(atomic_read(&vdev->des->readDenied)) {
-		atomic_dec(&vdev->des->activeReaderCount);
+	atomic_inc(&vdev->des->activeDirectAccessCount);
+	if(atomic_read(&vdev->des->directAccessDenied)) {
+		atomic_dec(&vdev->des->activeDirectAccessCount);
 		return -ENODEV;
 	}
 
@@ -501,7 +501,7 @@ static unsigned int vdev_poll(struct file *filp, poll_table *wait)
 		ret = POLLIN | POLLRDNORM;
 	}
 	
-	atomic_dec(&vdev->des->activeReaderCount);
+	atomic_dec(&vdev->des->activeDirectAccessCount);
 	
 	return ret;
 }

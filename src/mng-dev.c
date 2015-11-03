@@ -138,14 +138,14 @@ static void drvdat_put(struct mngdev_data *mngdev, struct inode *inode,
 		
 		if(vdev_des != NULL) {
 			
-			/* Notify the potential readers not to proceed with the read procedure. */
-			atomic_set(&vdev_des->readDenied, 1);
+			/* Notify the potential users not to proceed with the read procedure. */
+			atomic_set(&vdev_des->directAccessDenied, 1);
 			
 			/* 
-			* Wait untill any read procedure actually stopped before proceding to
+			* Wait untill any use procedure actually stopped before proceding to
 			* the destruction.
 			*/
-			while(atomic_read(&vdev_des->activeReaderCount) > 0) {
+			while(atomic_read(&vdev_des->activeDirectAccessCount) > 0) {
 				msleep(1);
 			}
 		}
