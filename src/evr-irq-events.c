@@ -99,7 +99,11 @@ irqreturn_t hw_support_evr_isr(struct modac_hw_support_data *hw_support_data, vo
 									dbctl | (1 << C_EVR_DATABUF_LOAD));
 		}
 		
-		modac_mngdev_notify(devdes, EVRMA_EVENT_DBUF_DATA);
+		/* DataBuf event, despite having no data attached,
+		 * is sent to the queue instead of being a notifying
+		 * event. That is to preserve the order of arrival.
+		 */
+		modac_mngdev_put_event(devdes, EVRMA_EVENT_DBUF_DATA, NULL, 0);
 
 	}
 	
