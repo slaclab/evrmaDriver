@@ -16,17 +16,32 @@
 #include "evr-sim.h"
 #include "linux-evrma.h"
 
-ssize_t hw_support_evr_store_dbg(struct modac_hw_support_data *hw_support_data, 
-						const char *buf, size_t count)
-{
-	struct evr_hw_data *hw_data = (struct evr_hw_data *)hw_support_data->priv;
-	
-	if(hw_data->sim != NULL) {
-		return evr_sim_dbg(hw_data, buf, count);
-	}
-	
-	return count;
-}
+/** @file */
+
+/**
+ * @defgroup g_sysfs_dbg  Sysfs debugging printouts
+ *
+ * @{
+ * 
+ * The sysfs makes it possible to view the information in text form. It is
+ * accessible via:
+ * 
+ * <pre>
+ *   /sys/class/modac-mng/evrXmng/command
+ * </pre>
+ * 
+ * for manager devices or
+ * 
+ * <pre>
+ *   /sys/class/modac-virt/vevrX/command
+ * </pre>
+ * 
+ * for virtual devices.
+ * 
+ * @}
+ */
+
+
 
 static ssize_t show_map_ram_bits(struct modac_hw_support_data *hw_support_data,
 								 char *buf, size_t count, int mapram, int bit)
@@ -55,6 +70,57 @@ static ssize_t show_map_ram_bits(struct modac_hw_support_data *hw_support_data,
 	n += scnprintf(buf + n, count - n, "\n");
 	return n;
 }
+
+/**
+ * @addtogroup g_sysfs_dbg
+ *
+ * @{
+ * 
+ * /sys/class/modac-mng/evrXmng/dbg
+ * ------
+ * 
+ * ### Reading 
+ *
+ * Prints out:
+ * 
+ * - Some of the EVR register field values.
+ * - For both HW Map RAMs: The event codes for which the 
+ *   bit 127 ("Save event in FIFO") is set to 1.
+ * 
+ * <pre>
+ * CTRL[MASTER_ENABLE]=\<N\>
+ * CTRL[MAP_RAM_ENABLE]=\<N\>
+ * CTRL[MAP_RAM_SELECT]=\<N\>
+ * IRQEN[MASTER_ENABLE]=\<N\>
+ * IRQEN[DATABUF]=\<N\>
+ * IRQEN[PULSE]=\<N\>
+ * IRQEN[EVENT]=\<N\>
+ * IRQEN[HEARTBEAT]=\<N\>
+ * IRQEN[FIFOFULL]=\<N\>
+ * IRQEN[VIOLATION]=\<N\>
+ * STATUS[LEGVIO]=\<N\>
+ * STATUS[FIFOSTP]=\<N\>
+ * STATUS[LINK]=\<N\>
+ * STATUS[SFPMOD]=\<N\>
+ * DATA_BUF_CTRL[DATABUF_MODE]=\<N\>
+ * DATA_BUF_CTRL[DATABUF_RECEIVING]=\<N\>
+ * DATA_BUF_CTRL[DATABUF_RXREADY]=\<N\>
+ * DATA_BUF_CTRL[DATABUF_CHECKSUM]=\<N\>
+ * DATA_BUF_CTRL[RXSIZE]=\<0xNN\>
+ * USEC_DIV=\<0xNN\>
+ * FRAC_DIV=\<0xNNNNNNNN\>
+ * MapRam[0],bit=127:\<LIST_OF_ADDRESSES_WITH_1\>
+ * MapRam[1],bit=127:\<LIST_OF_ADDRESSES_WITH_1\>
+ * </pre>
+ * 
+ * ### Writing
+ * 
+ * Writing to this device is supported only for the simulation and can
+ * generate virtual event interrupts.
+ * 
+ * 
+ * @}
+ */
 
 
 ssize_t hw_support_evr_show_dbg(struct modac_hw_support_data *hw_support_data, 
@@ -127,6 +193,55 @@ ssize_t hw_support_evr_show_dbg(struct modac_hw_support_data *hw_support_data,
 	return n;
 }
 
+ssize_t hw_support_evr_store_dbg(struct modac_hw_support_data *hw_support_data, 
+						const char *buf, size_t count)
+{
+	struct evr_hw_data *hw_data = (struct evr_hw_data *)hw_support_data->priv;
+	
+	if(hw_data->sim != NULL) {
+		return evr_sim_dbg(hw_data, buf, count);
+	}
+	
+	return count;
+}
+
+
+
+/**
+ * @addtogroup g_sysfs_dbg
+ *
+ * @{
+ * 
+ * /sys/class/modac-mng/evrXmng/hw_info
+ * ------
+ * 
+ * Prints out:
+ * 
+ * - Some basic information about the hardware.
+ * - Information about available pulse generators: absolute pulse generator index,
+ *   the number of prescaler register bits, the number of delay register bits
+ *   and the number of width register bits.
+ * - Information about available outputs.
+ * 
+ * <pre>
+ * 
+ * \<EVR_CARD_TYPE\>, hw_support_hint1=\<X\>, HW: \<PCI_BRIDGE\>, IRQ: \<PCI_IRQ_NUMBER\>,
+ * pulsegen:
+ * abs:\<ABS_PULSEGEN_INDEX\>,bits:presc=\<PRESCALER_BIT_LENGTH\>;delay=\<DELAY_BIT_LENGTH\>;width=\<WIDTH_BIT_LENGTH\>
+ * ...
+ * output:
+ * OUT[\<ABS_OUTPUT_INDEX\>]=\<OUTPUT_TYPE\>[\<OUTPUT_TYPE_INDEX\>],MAP=\<CURRENT_MAPPING\>
+ * ...
+ * </pre>
+ * 
+ * @note
+ * The \<CURRENT_MAPPING\> is the value written in the hardware register. It
+ * is not the number of the virtual pulse generator that it is connected to.
+ * 
+ * @}
+ */
+
+
 ssize_t hw_support_evr_dbg_res(struct modac_hw_support_data *hw_support_data, 
 						char *buf, size_t count, int res_type,
 						int res_index)
@@ -186,6 +301,32 @@ ssize_t hw_support_evr_dbg_res(struct modac_hw_support_data *hw_support_data,
 	
 	return n;
 }
+
+/**
+ * @addtogroup g_sysfs_dbg
+ *
+ * @{
+ * 
+ * /sys/class/modac-mng/evrXmng/regs
+ * ------
+ * 
+ * ### Write: sets the register range
+ * 
+ * <pre>
+ * echo ADDRESS_HEX  COUNT_DEC > /sys/class/modac-mng/evrXmng/regs
+ * </pre>
+ * 
+ * The ADDRESS is given as a hex value, the count must be in decimal.
+ * The starting default is 1024 bytes at the address 0x0.
+ * 
+ * ### Read: prints out the EVR register values.
+ * 
+ * The printout contains hex values, 32 bytes per line, each line is marked
+ * with the hex start address.
+ * 
+ * @}
+ */
+
 
 static ssize_t print_regs(struct modac_hw_support_data *hw_support_data,
 			char *buf, size_t count, u32 regs_offset, u32 regs_length)
@@ -255,4 +396,49 @@ ssize_t hw_support_evr_dbg_info(struct modac_hw_support_data *hw_support_data,
 	}
 	return n;
 }
+
+/* The following is realized in mng-dev.c because it is not EVR dependent. */
+
+/**
+ * @addtogroup g_sysfs_dbg
+ *
+ * @{
+ * 
+ * /sys/class/modac-mng/evrXmng/alloc
+ * ------
+ * 
+ * Prints out a list that describes current allocation of the virtual resources.
+ * For every virtual resource the following data is output:
+ * 
+ * <pre>
+ * \<TOTAL_VIRT_RES_NUMBER\> \<RESOURCE_TYPE_FIRST_LETTER\> \<TYPE_RES_NUMBER\> \<OWNER_ID\>  
+ * </pre>
+ * 
+ * For EVR there are two types of virtual resouces, "output" and "pulsegen",
+ * \<RESOURCE_TYPE_FIRST_LETTER\> will thus be 'o' or 'p'. \<OWNER_ID\> equals
+ * to the minor number of the VEVR Linux device.
+ * 
+ * This output is intended for automated testing.
+ * 
+ * @}
+ */
+
+
+
+/**
+ * @addtogroup g_sysfs_dbg
+ *
+ * @{
+ * 
+ * /sys/class/modac-mng/evrXmng/events
+ * ------
+ * 
+ * Prints out a the count of events that were accepted by the driver. There is
+ * one number for every virtual event number 0 - 511.
+ * 
+ * @}
+ */
+
+
+
 
