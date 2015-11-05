@@ -1,18 +1,18 @@
 #ifndef PACKET_QUEUE_H_
 #define PACKET_QUEUE_H_
 
-// TODO: temporarily, to set DBG_MEASURE_TIME_FROM_IRQ_TO_USER
-#include "linux-evrma.h"
-
-#ifndef DBG_MEASURE_TIME_FROM_IRQ_TO_USER
-#warning **********************************************************************
-#warning **********************************************************************
-#warning **********************************************************************
-#warning Please, remove #include "linux-evrma.h" now that it's not needed anymore.
-#warning **********************************************************************
-#warning **********************************************************************
-#warning **********************************************************************
-#endif
+// // TODO: temporarily, to set DBG_MEASURE_TIME_FROM_IRQ_TO_USER
+// #include "linux-evrma.h"
+// 
+// #ifndef DBG_MEASURE_TIME_FROM_IRQ_TO_USER
+// #warning **********************************************************************
+// #warning **********************************************************************
+// #warning **********************************************************************
+// #warning Please, remove #include "linux-evrma.h" now that it is not needed anymore.
+// #warning **********************************************************************
+// #warning **********************************************************************
+// #warning **********************************************************************
+// #endif
 
 
 
