@@ -1,0 +1,202 @@
+Directories "build-*"
+=====================
+
+Contains the make files needed to build the kernel driver on different platforms.
+
+
+
+
+
+Directory "src"
+=====================
+
+
+mng-dev.c, mng-dev.h
+---------------------
+
+This is the core of the driver. Basicaly everything that is happening in the 
+driver goes here through to ensure the overall consistency of the data.
+
+- mng-dev.c manages the MNG_DEVs and connects together all other parts of the 
+  system (VIRT_DEVs, resoure and event managing, HW support).
+- mng-dev.h exposes the mng-dev API.
+
+This code is EVR independent.
+
+
+
+virt-dev.c, virt-dev.h
+---------------------
+
+Everything needed to handle the VIRT_DEVs.
+
+- virt-dev.c implements the functionality. 
+- virt -dev.h exposes the virt-dev API.
+
+This code is EVR independent. 
+
+This code can only call / be called from the mng-dev.c. It can also use utility 
+functions.
+
+
+
+rm.c, rm.h
+---------------------
+
+- rm.c implements Resource Manager utility functions.
+- rm.h exposes the Resource Manager API.
+
+This code is EVR independent. 
+This code can be called from anywhere.
+
+
+
+
+event-list.c, event-list.h
+----------------------------
+
+- event-list.c implements utility functions to handle event lists and event 
+  subscriptions.
+- event-list.h exposes the API.
+
+This code is EVR independent. 
+
+This code can be called from anywhere.
+
+
+
+
+packet-queue.c, packet-queue.h
+--------------------------------
+
+Utility functions to handle packet queues used for reading from VIRT_DEVs.
+
+This code is EVR independent. 
+
+
+
+
+hw-support.h
+---------------------
+
+This is the API (HW support plugin) that shields the HW dependent code (like 
+EVR) from the rest of the system that is EVR independent.
+
+Note that the API is so constructed that instead of implementing the EVR any 
+other type of the HW could be transparently supported provided that the HW has 
+the functionality that can be virtualized in a similar way (EVG?). The EVR 
+independent code wouldn't remain the same in this case.
+
+evr.c, evr-irq-events, evr-dbg.c, evr.h, evr-internal.h
+---------------------------------------------------------
+
+All the EVR dependent code resides here (and nowhere else). Note that this is 
+the code that deals with EVR registers and corresponds roughly to the code that 
+was traditionally run in user space on the mmap-ed IO memory.
+
+evr.h exposes the API to the others parts of the system where needed.
+
+evr-internal.h is used to hold the EVR definitions that are common to the EVR 
+dependent code but are not to be used outside the EVR realization.
+
+This code is only called from the MNG_DEV via the HW support plugin. Also, it 
+can only call the MNG_DEV code and utility functions.
+
+This code guesses the type of the EVR installed by:
+- using the information from the registers
+- using the information obtained from the lower level (like PCI: vendor & device IDs).
+
+
+
+
+
+evr-sim.c, evr-sim.h
+---------------------
+
+The ordinary EVR HW support can also be called in a way that instead of 
+accessing the real EVR HW a simple debugging simulation is run instead.  This 
+enables to make automated tests of the framework (MNG_DEV, VIRT_DEV, RM, …) 
+independently of the installed EVR HW (can also be run without it). 
+
+
+
+
+pci-evr.c, plx.c, plx.h
+--------------------------
+
+This code implements the PCI driver. It tries to find all the EVR devices on the
+system and creates a MNG_DEV for every one of them. It also receives the PCI 
+interrupts and dispatches them to the corresponding MNG_DEVs.
+
+
+
+
+main_evrma.c
+---------------------
+
+The driver entry point. It:
+
+- allocates the major driver number with the minor range 0..255
+- creates an EVR simulation device and uses the MNG_DEV minor 224 for that.
+- Initializes the EVR PCI operation and assigns the remaining 7 possible MNG_DEV 
+  minors to it (0, 32, 64, …, 192).
+  
+
+  
+  
+linux-*.h
+---------------------
+
+These files define the API and the definitions that are also exported for use in 
+the user space applications (besides being included in the kernel driver as well).
+
+- linux-modac.h: The general modular access functionality (EVR independent)
+- linux-evrma.h: The definitions needed to support the EVR HW.
+- linux-evr-regs.h: The definitions needed for the mmap-ed access from the evrManager.
+
+
+
+
+
+devref.h
+---------------------
+
+A 'device reference' object needed to support the hot-unplug functionality
+(written by Till Straumann).
+
+
+
+
+
+
+internal.h
+---------------------
+
+Auxilliary internal definitions.
+
+
+
+
+evrma-core-api.h
+---------------------
+
+This header exposes an API that allows to create MNG_DEVs from external PCI. 
+The API is extremely simple, three functions must be called:
+- evrma_core_api_external_probe: called in PCI probe function after detecting 
+  and allocating all the IO memories.
+- evrma_core_api_external_remove: called in the PCI remove function before 
+  releasing the IO memory data.
+- evrma_core_api_external_irq: called when the IRQ from PCI is intended for the 
+  MNG_DEV.
+  
+On probe the following must be given:
+- IO memory info (start, length).
+- A callback function ' irq_enable' which will be called from the MNG_DEV if 
+  the subscriptions will require such action.
+  
+This API was provided for the EMCOR project, although it can be generally used 
+and called from any PCI processing driver.
+
+
+
+
