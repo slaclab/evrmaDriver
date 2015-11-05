@@ -99,11 +99,24 @@ irqreturn_t hw_support_evr_isr(struct modac_hw_support_data *hw_support_data, vo
 									dbctl | (1 << C_EVR_DATABUF_LOAD));
 		}
 		
+#ifdef DBG_MEASURE_TIME_FROM_IRQ_TO_USER
+		{
+			struct evr_data_fifo_event et_data;
+			
+			et_data.seconds = 0;
+			// store the time spent in the DataBuff
+			et_data.timestamp = dbg_get_time(hw_support_data) - arrival_time; // + 5000 * 119;
+			et_data.dbg_timestamp[0] = arrival_time;
+			
+			modac_mngdev_put_event(devdes, EVRMA_EVENT_DBUF_DATA, &et_data, sizeof(et_data));
+		}
+#else
 		/* DataBuf event, despite having no data attached,
 		 * is sent to the queue instead of being a notifying
 		 * event. That is to preserve the order of arrival.
 		 */
 		modac_mngdev_put_event(devdes, EVRMA_EVENT_DBUF_DATA, NULL, 0);
+#endif
 
 	}
 	
