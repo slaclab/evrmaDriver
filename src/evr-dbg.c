@@ -19,11 +19,11 @@
 /** @file */
 
 /**
- * @defgroup g_sysfs_dbg  Sysfs debugging printouts
+ * @defgroup g_sysfs_dbg  Sysfs debugging
  *
  * @{
  * 
- * The sysfs makes it possible to view the information in text form. It is
+ * The sysfs makes it possible to view/set the information in text form. It is
  * accessible via:
  * 
  * <pre>
@@ -435,6 +435,71 @@ ssize_t hw_support_evr_dbg_info(struct modac_hw_support_data *hw_support_data,
  * 
  * Prints out a the count of events that were accepted by the driver. There is
  * one number for every virtual event number 0 - 511.
+ * 
+ * @}
+ */
+
+
+/**
+ * @addtogroup g_sysfs_dbg
+ *
+ * @{
+ * 
+ * /sys/class/modac-virt/vevrX/config
+ * ------
+ * 
+ * Handles the VEVR configuration.
+ * 
+ * ### Write
+ * 
+ * To reset the settings of the HW (pulse generator properties, ...):
+ * 
+ * <pre>
+ * echo hw_reset > /sys/class/modac-virt/vevrX/config
+ * </pre>
+ *
+ * To make the HW settings remain even after the last VEVR has closed:
+ * 
+ * <pre>
+ * echo 1 > /sys/class/modac-virt/vevrX/config
+ * </pre>
+ *
+ * 
+ * To make the HW setting being erased after the last VEVR has closed
+ * (the default configuration):
+ * 
+ * <pre>
+ * echo 0 > /sys/class/modac-virt/vevrX/config
+ * </pre>
+ *
+ * ### Read
+ * 
+ * The output of this command is compact and meant primarily for machine
+ * reading:
+ * 
+ * <pre>
+ * 0[\<pulse generators information\>]1[\<outputs information\>]
+ * subs[\<subscriptions information\>], 
+ * res_set_cfg=\<res_set_cfg_value\>
+ * </pre>
+ * 
+ * where \<pulse generators information\> or \<outputs information\> is composed
+ * of one information packet per resource:
+ * <pre>
+ * \<virtual resource index\>\<virtual resource information\>
+ * </pre>
+ * 
+ * For virtual resource information format see the
+ * /sys/class/modac-mng/evrXmng/hw_info.
+ * 
+ * \<subscriptions information\> is in the form:
+ * <pre>
+ * \<event number 1\>\<event number 2\>...\<event number n\>
+ * </pre>
+ * 
+ * \<res_set_cfg_value\> is 0 if the HW setting are erased after the last VEVR 
+ * has closed and 1 if the settings remain in that case.
+ * 
  * 
  * @}
  */
