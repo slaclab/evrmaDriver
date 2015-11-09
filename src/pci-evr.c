@@ -236,24 +236,24 @@ static int pci_mrf_major, pci_mrf_minor_start;
  */
 static struct mutex mutex;
 
-static u32 read_u32(struct pci_mrf_data *ev_device, u32 offset)
+static inline u32 read_u32(struct pci_mrf_data *ev_device, u32 offset)
 {
 	void __iomem *io_start = (void __iomem *)ev_device->io_ptr;
 	return ioread32(io_start + offset);
 }
 
-static void write_u32(struct pci_mrf_data *ev_device, u32 offset, u32 value)
+static inline void write_u32(struct pci_mrf_data *ev_device, u32 offset, u32 value)
 {
 	void __iomem *io_start = (void __iomem *)ev_device->io_ptr;
 	iowrite32(value, io_start + offset);
 }
 
-static u32 be_read_u32(struct pci_mrf_data *ev_device, u32 offset)
+static inline u32 be_read_u32(struct pci_mrf_data *ev_device, u32 offset)
 {
 	return be32_to_cpu(read_u32(ev_device, offset));
 }
 
-static void be_write_u32(struct pci_mrf_data *ev_device, u32 offset, u32 value)
+static inline void be_write_u32(struct pci_mrf_data *ev_device, u32 offset, u32 value)
 {
 	write_u32(ev_device, offset, cpu_to_be32(value));
 }

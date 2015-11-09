@@ -243,17 +243,17 @@ static void cleanup(struct mngdev_data *mngdev, int what)
 	}
 }
 
-static void dev_spin_lock(struct mngdev_data *mngdev)
+static inline void dev_spin_lock(struct mngdev_data *mngdev)
 {
 	spin_lock_irqsave(&mngdev->lock_general, mngdev->lock_flags);
 }
 
-static void dev_spin_unlock(struct mngdev_data *mngdev)
+static inline void dev_spin_unlock(struct mngdev_data *mngdev)
 {
 	spin_unlock_irqrestore(&mngdev->lock_general, mngdev->lock_flags);
 }
 
-static void vdev_destroy(struct mngdev_data *mngdev, struct modac_vdev_des *vdev_des)
+static inline void vdev_destroy(struct mngdev_data *mngdev, struct modac_vdev_des *vdev_des)
 {
 	mngdev_event_dispatch_list_remove_all(mngdev, vdev_des);
 	modac_vdev_destroy(vdev_des);
@@ -278,7 +278,7 @@ static int mngdev_devref_lock(struct mngdev_data *mngdev)
 	return 0;
 }
 
-static void mngdev_devref_unlock(struct mngdev_data *mngdev)
+static inline void mngdev_devref_unlock(struct mngdev_data *mngdev)
 {
 	devref_unlock( &mngdev->ref );
 }
@@ -986,21 +986,21 @@ static void modac_mngdev_process_event(struct modac_mngdev_des *devdes, int noti
  * When we remove the device we zap all mappings
  * from all inodes.
  */ 
-static int
+static inline int
 unmap_inode(struct inode *inod, void *closure)
 {
 	unmap_mapping_range( inod->i_mapping, 0, 0, 1 );
 	return 0;
 }
 
-static void app_kill(struct mngdev_data *mngdev)
+static inline void app_kill(struct mngdev_data *mngdev)
 {
 	if(mngdev->pid != NO_PID) {
 		kill_pid(find_vpid(mngdev->pid), SIGKILL, 1);
 	}
 }
 
-static void mngdev_destroy_now(struct mngdev_data *mngdev)
+static void inline mngdev_destroy_now(struct mngdev_data *mngdev)
 {
 	list_destroy_vdevs(mngdev);
 	cleanup(mngdev, CLEAN_ALL);

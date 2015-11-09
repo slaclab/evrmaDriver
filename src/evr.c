@@ -292,7 +292,7 @@ static int pulsegen_suits(struct modac_rm_data *rm_data, int index, int *arg_fil
 	return suitability;
 }
 
-static int output_suits(struct modac_rm_data *rm_data, int index, int *arg_filters)
+static inline int output_suits(struct modac_rm_data *rm_data, int index, int *arg_filters)
 {
 	/*
 	 * the outputs MUST be allocated by a fixed index so this will not be called

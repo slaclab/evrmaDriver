@@ -89,7 +89,7 @@ static void init_dev(struct vdev_data *vdev)
 	event_list_clear(&vdev->notified_events);
 }
 
-static int dev_name_equal(struct device *dev, void *arg)
+static inline int dev_name_equal(struct device *dev, void *arg)
 {
 	const char *dev_name_arg = (const char *)arg;
 	const char *dev_name_dev = dev_name(dev);
@@ -102,7 +102,7 @@ static int dev_name_equal(struct device *dev, void *arg)
 	return STRINGS_EQUAL(dev_name_arg, dev_name_dev);
 }
 
-static int dev_exists_for_vdev_class(const char *dev_name_arg)
+static inline int dev_exists_for_vdev_class(const char *dev_name_arg)
 {
 	return class_for_each_device(modac_vdev_class, NULL, 
 								 (void *)dev_name_arg, dev_name_equal);
@@ -118,7 +118,7 @@ static void cleanup(struct vdev_data *vdev, int what)
 	}
 }
 
-static int calc_table_indices(int minor, int *imngdev, int *ivdev)
+static inline int calc_table_indices(int minor, int *imngdev, int *ivdev)
 {
 	if(minor % MINOR_MULTIPLICATOR == 0) {
 		return -ENODEV;
@@ -357,7 +357,7 @@ bail:
 }
 
 /* Return 0 or 1. */
-static int read_has_data(struct vdev_data *vdev)
+static inline int read_has_data(struct vdev_data *vdev)
 {
 	int ret = 0;
 	
@@ -803,7 +803,14 @@ void modac_vdev_destroy(struct modac_vdev_des *vdev_des)
 	struct vdev_data *vdev = (struct vdev_data *)vdev_des->priv;
 	int imngdev, ivdev;
 	
-	calc_table_indices(vdev_des->minor, &imngdev, &ivdev);
+	if(calc_table_indices(vdev_des->minor, &imngdev, &ivdev)) {
+		/* 
+		 * Saniti check. In reality this can't happen
+		 * (the same call in 'modac_vdev_create' succeeded otherwise the code
+		 * couldn't have arrived here). 
+		 */
+		return;
+	}
 
 	/* remove the 'vdev' from the lookup table
 	 * so that future 'open' won't find it.
