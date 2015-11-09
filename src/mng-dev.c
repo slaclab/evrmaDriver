@@ -111,6 +111,16 @@ static void mngdev_event_dispatch_list_remove_all(
 		struct modac_vdev_des *vdev_des);
 static void mngdev_destroy_now(struct mngdev_data *mngdev);
 
+static inline int read_direct_access_active_count(struct modac_vdev_des *vdev_des)
+{
+	int ret;
+	
+	spin_lock(&vdev_des->direct_access_spinlock);
+	ret = vdev_des->direct_access_active_count;
+	spin_unlock(&vdev_des->direct_access_spinlock);
+	
+	return ret;
+}
 
 /*****  Misc functions  *****/
 
@@ -139,13 +149,15 @@ static void drvdat_put(struct mngdev_data *mngdev, struct inode *inode,
 		if(vdev_des != NULL) {
 			
 			/* Notify the potential users not to proceed with the read procedure. */
-			atomic_set(&vdev_des->directAccessDenied, 1);
+			spin_lock(&vdev_des->direct_access_spinlock);
+			vdev_des->direct_access_denied = 1;
+			spin_unlock(&vdev_des->direct_access_spinlock);
 			
 			/* 
 			* Wait untill any use procedure actually stopped before proceding to
 			* the destruction.
 			*/
-			while(atomic_read(&vdev_des->activeDirectAccessCount) > 0) {
+			while(read_direct_access_active_count(vdev_des) > 0) {
 				msleep(1);
 			}
 		}

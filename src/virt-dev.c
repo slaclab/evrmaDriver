@@ -63,8 +63,10 @@ static void init_dev(struct vdev_data *vdev)
 	modac_cb_init(&vdev->cb_events);
 	spin_lock_init(&vdev->cb_reader_lock);
 	init_waitqueue_head(&vdev->wait_queue_events);
-	atomic_set(&vdev->des->directAccessDenied, 0);
-	atomic_set(&vdev->des->activeDirectAccessCount, 0);
+	
+	spin_lock_init(&vdev->des->direct_access_spinlock);
+	vdev->des->direct_access_denied = 0;
+	vdev->des->direct_access_active_count = 0;
 	
 	event_list_clear(&vdev->notified_events);
 }
@@ -170,6 +172,39 @@ static int vdev_release(struct inode *inode, struct file *filp)
 	return 0;
 }
 
+static inline void unlock_direct_call(struct modac_vdev_des *vdev_des)
+{
+	spin_lock(&vdev_des->direct_access_spinlock);
+	vdev_des->direct_access_active_count --;
+	spin_unlock(&vdev_des->direct_access_spinlock);
+}
+
+static inline int lock_direct_call(struct modac_vdev_des *vdev_des)
+{
+	/* 
+	* Direct HW calls are not protected by a mutex so they have to be
+	* protected by this mechanism in case of hot-unplug.
+	*/
+	
+	int denied;
+	
+	spin_lock(&vdev_des->direct_access_spinlock);
+	vdev_des->direct_access_active_count ++;
+	spin_unlock(&vdev_des->direct_access_spinlock);
+	
+	spin_lock(&vdev_des->direct_access_spinlock);
+	denied = vdev_des->direct_access_denied;
+	spin_unlock(&vdev_des->direct_access_spinlock);
+	
+	if(denied) {
+		unlock_direct_call(vdev_des);
+		return 0;
+	}
+	
+	return 1;
+}
+
+
 static int read_has_data(struct vdev_data *vdev);
 
 static long vdev_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
@@ -197,19 +232,13 @@ static long vdev_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned lo
 	if (_IOC_NR(cmd) >= VIRT_DEV_HW_DIRECT_IOC_MIN &&
 			   _IOC_NR(cmd) <= VIRT_DEV_HW_DIRECT_IOC_MAX) {
 		
-		/* 
-		 * Direct HW calls are not protected by a mutex so they have to be
-		 * protected by this mechanism.
-		 */
-		atomic_inc(&vdev->des->activeDirectAccessCount);
-		if(atomic_read(&vdev->des->directAccessDenied)) {
-			atomic_dec(&vdev->des->activeDirectAccessCount);
+		if(!lock_direct_call(vdev->des)) {
 			return -ENODEV;
 		}
 		
 		ret = modac_c_vdev_do_direct_ioctl(vdev->des, cmd, arg);
 
-		atomic_dec(&vdev->des->activeDirectAccessCount);
+		unlock_direct_call(vdev->des);
 		
 		return ret;
 	}
@@ -389,9 +418,7 @@ static ssize_t vdev_read(struct file *filp, char __user *buff, size_t buf_len, l
 	 * lock is implemented instead to prevent running the code after the
 	 * VDEV destruction.
 	 */
-	atomic_inc(&vdev->des->activeDirectAccessCount);
-	if(atomic_read(&vdev->des->directAccessDenied)) {
-		atomic_dec(&vdev->des->activeDirectAccessCount);
+	if(!lock_direct_call(vdev->des)) {
 		return -ENODEV;
 	}
 	
@@ -425,7 +452,7 @@ static ssize_t vdev_read(struct file *filp, char __user *buff, size_t buf_len, l
 			/*
 			 * The process will sleep so the devref mechanism must be unlocked.
 			 */
-			atomic_dec(&vdev->des->activeDirectAccessCount);
+			unlock_direct_call(vdev->des);
 			
 			/*
 			 * The system is unlocked now and a close can happen while the read
@@ -444,9 +471,7 @@ static ssize_t vdev_read(struct file *filp, char __user *buff, size_t buf_len, l
 			}
 
 			/* lock again */
-			atomic_inc(&vdev->des->activeDirectAccessCount);
-			if(atomic_read(&vdev->des->directAccessDenied)) {
-				atomic_dec(&vdev->des->activeDirectAccessCount);
+			if(!lock_direct_call(vdev->des)) {
 				return -ENODEV;
 			}
 		} else {
@@ -476,7 +501,7 @@ static ssize_t vdev_read(struct file *filp, char __user *buff, size_t buf_len, l
 	
 bail:
 
-	atomic_dec(&vdev->des->activeDirectAccessCount);
+	unlock_direct_call(vdev->des);
 
 	return ret;
 }
@@ -490,9 +515,7 @@ static unsigned int vdev_poll(struct file *filp, poll_table *wait)
 	/* The poll() is, like read(), called from the high-priority thread and 
 	 * must not use the mutexes to lock.
 	 */
-	atomic_inc(&vdev->des->activeDirectAccessCount);
-	if(atomic_read(&vdev->des->directAccessDenied)) {
-		atomic_dec(&vdev->des->activeDirectAccessCount);
+	if(!lock_direct_call(vdev->des)) {
 		return -ENODEV;
 	}
 
@@ -501,7 +524,7 @@ static unsigned int vdev_poll(struct file *filp, poll_table *wait)
 		ret = POLLIN | POLLRDNORM;
 	}
 	
-	atomic_dec(&vdev->des->activeDirectAccessCount);
+	unlock_direct_call(vdev->des);
 	
 	return ret;
 }
