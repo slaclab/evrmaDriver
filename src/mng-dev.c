@@ -961,28 +961,26 @@ static void modac_mngdev_process_event(struct modac_mngdev_des *devdes, int noti
 	int event, void *data, int length)
 {
 	struct mngdev_data *mngdev = (struct mngdev_data *)devdes->priv;
+	struct irq_process_arg arg;
 	
 	if(event >= 0 && event < MAX_COUNTED_EVENTS) {
 		atomic_inc(&mngdev->event_counters[event]);
 	}
-	
-	{
-		struct irq_process_arg arg;
-		
-		arg.notify_only = notify_only;
-		arg.event = event;
-		arg.data = data;
-		arg.length = length;
 
-		/* 
-		 * copy the event everywhere
-		 */
-		dev_spin_lock(mngdev);
+	arg.notify_only = notify_only;
+	arg.event = event;
+	arg.data = data;
+	arg.length = length;
 
-		event_dispatch_list_for_all_subscribers(&mngdev->event_dispatch_list, event, irq_process, &arg);
+	/* 
+	 * copy the event everywhere
+	 */
+	dev_spin_lock(mngdev);
 
-		dev_spin_unlock(mngdev);
-	}
+	event_dispatch_list_for_all_subscribers(&mngdev->event_dispatch_list, event,
+											irq_process, &arg);
+
+	dev_spin_unlock(mngdev);
 }
 
 /*****  Local hot-unplug support functions  *****/
