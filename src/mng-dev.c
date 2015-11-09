@@ -253,13 +253,6 @@ static inline void dev_spin_unlock(struct mngdev_data *mngdev)
 	spin_unlock_irqrestore(&mngdev->lock_general, mngdev->lock_flags);
 }
 
-static inline void vdev_destroy(struct mngdev_data *mngdev, struct modac_vdev_des *vdev_des)
-{
-	mngdev_event_dispatch_list_remove_all(mngdev, vdev_des);
-	modac_vdev_destroy(vdev_des);
-	modac_rm_free_owner(&mngdev->rm_data, vdev_des->id);
-}
-
 static int mngdev_devref_lock(struct mngdev_data *mngdev)
 {
 	/* Lock the reference. (No need to increment the reference
@@ -371,16 +364,6 @@ static struct modac_vdev_des *list_find_vdev_by_name(
 	return NULL;
 }
 
-static void list_destroy_vdevs(struct mngdev_data *mngdev)
-{
-	struct list_head *ptr;
-	
-	list_for_each(ptr, &mngdev->vdev_list) {
-		struct modac_vdev_des *vdev_des = list_entry(ptr, struct modac_vdev_des, mngdev_item);
-		vdev_destroy(mngdev, vdev_des);
-	}
-}
-
 static int list_create_vdev(struct mngdev_data *mngdev, u8 id, 
 								struct modac_vdev_des **vdev_des)
 {
@@ -398,9 +381,38 @@ static int list_create_vdev(struct mngdev_data *mngdev, u8 id,
 }
 	
 static void list_destroy_vdev(struct mngdev_data *mngdev, 
-								  struct modac_vdev_des *vdev_des)
+							  struct modac_vdev_des *vdev_des,
+							  int modac_vdev_create_was_done
+ 							)
 {
+	if(modac_vdev_create_was_done) {
+		mngdev_event_dispatch_list_remove_all(mngdev, vdev_des);
+		modac_rm_free_owner(&mngdev->rm_data, vdev_des->id);
+		modac_vdev_destroy(vdev_des);
+	}
+	
 	list_del_init(&vdev_des->mngdev_item);
+	kfree(vdev_des);
+}
+
+static void list_stop_and_destroy_vdevs(struct mngdev_data *mngdev)
+{
+	struct list_head *head = &mngdev->vdev_list;
+	struct list_head *ptr;
+	
+	ptr = head->next;
+	
+	while(ptr != head) {
+		
+		struct modac_vdev_des *vdev_des;
+		
+		vdev_des = list_entry(ptr, struct modac_vdev_des, mngdev_item);
+		
+		/* retreive the next pointer before destroying */
+		ptr = ptr->next;
+		
+		list_destroy_vdev(mngdev, vdev_des, 1);
+	}
 }
 
 
@@ -749,7 +761,7 @@ static long mngdev_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned 
 				ret = modac_vdev_create(vdev_des);
 				if(ret) {
 					// failed, clean up
-					list_destroy_vdev(mngdev, vdev_des);
+					list_destroy_vdev(mngdev, vdev_des, 0);
 				}
 			}
 		}
@@ -773,12 +785,8 @@ done:
 		if(vdev_des == NULL) {
 			ret = -ENODEV;
 		} else {
-			list_destroy_vdev(mngdev, vdev_des);
+			list_destroy_vdev(mngdev, vdev_des, 1);
 			ret = 0;
-		}
-		
-		if(!ret) {
-			vdev_destroy(mngdev, vdev_des);
 		}
 		
 		break;
@@ -1002,7 +1010,7 @@ static inline void app_kill(struct mngdev_data *mngdev)
 
 static void inline mngdev_destroy_now(struct mngdev_data *mngdev)
 {
-	list_destroy_vdevs(mngdev);
+	list_stop_and_destroy_vdevs(mngdev);
 	cleanup(mngdev, CLEAN_ALL);
 }
 
