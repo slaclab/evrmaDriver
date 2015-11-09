@@ -16,10 +16,20 @@
 #include "virt-dev.h"
 #include "packet-queue.h"
 
-/*
- * A common class for VIRT_DEVs in the MODAC system.
- */
-static struct class *modac_vdev_class;
+
+enum {
+	CLEAN_PRIV,
+	CLEAN_DEV,
+	CLEAN_ALL = CLEAN_DEV
+};
+
+enum {
+	CLEAN_SYS_CLASS,
+	CLEAN_SYS_TABLE,
+	CLEAN_SYS_CDEV,
+	
+	CLEAN_SYS_ALL = CLEAN_SYS_CDEV
+};
 
 
 struct vdev_data {
@@ -50,6 +60,14 @@ struct vdev_table_item {
 	int have_cdev;
 	struct vdev_data *vdev[MAX_VIRT_DEVS_PER_MNG_DEV];
 };
+
+
+
+
+/*
+ * A common class for VIRT_DEVs in the MODAC system.
+ */
+static struct class *modac_vdev_class;
 
 static int vdev_mng_first_minor;
 
@@ -89,12 +107,6 @@ static int dev_exists_for_vdev_class(const char *dev_name_arg)
 	return class_for_each_device(modac_vdev_class, NULL, 
 								 (void *)dev_name_arg, dev_name_equal);
 }
-
-enum {
-	CLEAN_PRIV,
-	CLEAN_DEV,
-	CLEAN_ALL = CLEAN_DEV
-};
 
 static void cleanup(struct vdev_data *vdev, int what)
 {
@@ -837,16 +849,6 @@ void modac_vdev_table_reset(int mngdev_minor)
 }
 
 
-
-
-
-enum {
-	CLEAN_SYS_CLASS,
-	CLEAN_SYS_TABLE,
-	CLEAN_SYS_CDEV,
-	
-	CLEAN_SYS_ALL = CLEAN_SYS_CDEV
-};
 
 static void cleanup_sys(int what)
 {

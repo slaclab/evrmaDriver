@@ -17,10 +17,22 @@
 #include "mng-dev.h"
 #include "virt-dev.h"
 
-/*
- * common for the MODAC mng system
- */
-static struct class *modac_mngdev_class;
+enum {
+	CLEAN_PRIV,
+	CLEAN_HW,
+	CLEAN_RM,
+	CLEAN_DEV,
+	CLEAN_ALL = CLEAN_DEV
+};
+
+enum {
+	CLEAN_SYS_CLASS,
+	CLEAN_SYS_TABLE,
+	CLEAN_SYS_CDEV,
+	CLEAN_SYS_VDEV,
+	
+	CLEAN_SYS_ALL = CLEAN_SYS_VDEV
+};
 
 #define NO_PID 0
 
@@ -28,6 +40,7 @@ static struct class *modac_mngdev_class;
  * which events are counted (0...MAX_COUNTED_EVENTS-1)
  */
 #define MAX_COUNTED_EVENTS EVENT_LIST_TYPE_MAX_EVENTS
+
 
 /*
  * Per MNG_DEV data
@@ -94,6 +107,22 @@ struct mngdev_table_item {
 	int have_cdev;
 	struct mngdev_data *mngdev;
 };
+
+struct irq_process_arg {
+	int notify_only;
+	int event;
+	void *data;
+	int length;
+};
+
+
+
+
+
+/*
+ * common for the MODAC mng system
+ */
+static struct class *modac_mngdev_class;
 
 static int mngdev_first_minor;
 
@@ -199,14 +228,6 @@ static void init_dev(struct mngdev_data *mngdev)
 	
 	event_dispatch_list_init(&mngdev->event_dispatch_list);
 }
-
-enum {
-	CLEAN_PRIV,
-	CLEAN_HW,
-	CLEAN_RM,
-	CLEAN_DEV,
-	CLEAN_ALL = CLEAN_DEV
-};
 
 static void cleanup(struct mngdev_data *mngdev, int what)
 {
@@ -913,13 +934,6 @@ static const struct file_operations mngdev_fops = {
 
 
 /*****  Local IRQ context support and functions  *****/
-
-struct irq_process_arg {
-	int notify_only;
-	int event;
-	void *data;
-	int length;
-};
 
 /* Called from an IRQ in a spin-locked context. */
 static void irq_process(void *subscriber, void *arg_a)
@@ -1690,15 +1704,6 @@ irqreturn_t modac_mngdev_isr(struct modac_mngdev_des *devdes, void *data)
 	return mngdev->des->hw_support->isr(&mngdev->hw_support_data, data);
 }
 
-
-enum {
-	CLEAN_SYS_CLASS,
-	CLEAN_SYS_TABLE,
-	CLEAN_SYS_CDEV,
-	CLEAN_SYS_VDEV,
-	
-	CLEAN_SYS_ALL = CLEAN_SYS_VDEV
-};
 
 static void cleanup_sys(int what)
 {

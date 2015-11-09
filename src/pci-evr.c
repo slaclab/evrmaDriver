@@ -93,52 +93,6 @@
 	#define EMCOR_PCI_DEVICE	0x1000
 #endif
 
-
-static const struct pci_device_id evrma_pci_ids[] = {
-
-	{ PCI_DEVICE(PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PMCEVR230), },
-	{ PCI_DEVICE(PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVR300), },
-	{ PCI_DEVICE(PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PCIEEVR300), },
-	{ PCI_DEVICE(PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVRTG300), },
-
-	// this #if LINUX_VERSION_CODE is only because PCI_DEVICE_SUB is not defined. If you really
-	// needed the support you have to find out how to do it.
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,8,00)
-
-	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PMCEVR230), },
-	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVR300), },
-	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PCIEEVR300), },
-	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVRTG300), },
-// 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PMCEVR200), },
-
-	{ PCI_DEVICE_SUB(PCI_ANY_ID, PCI_ANY_ID, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PMCEVR230), },
-	{ PCI_DEVICE_SUB(PCI_ANY_ID, PCI_ANY_ID, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVR300), },
-	{ PCI_DEVICE_SUB(PCI_ANY_ID, PCI_ANY_ID, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PCIEEVR300), },
-	{ PCI_DEVICE_SUB(PCI_ANY_ID, PCI_ANY_ID, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVRTG300), },
-
-#endif
-	
-	// Signal processing controller: SLAC National Accelerator Lab PPA-REG PCI-Express EVR
-    //    Subsystem: SLAC National Accelerator Lab PPA-REG PCI-Express EVR
-	{ PCI_DEVICE(PCI_VENDOR_ID_XILINX_PCIE, PCI_DEVICE_ID_XILINX_PCIE), },
-	
-#ifdef DEBUG_EMCOR_CARD
-	{ PCI_DEVICE(EMCOR_PCI_VENDOR, EMCOR_PCI_DEVICE), },
-#endif
-
-// 	// Signal processing controller: Lattice Semiconductor Corporation Device ec30 (rev 01)
-//     //    Subsystem: Device 1a3e:172c
-// 	{ PCI_DEVICE(0x1204, 0xec30), },
-	
-// 	
-// 	// Signal processing controller: PLX Technology, Inc. PCI9030 32-bit 33MHz PCI <-> IOBus Bridge (rev 01)
-//     //    Subsystem: Device 1a3e:11e6
-// 	{ PCI_DEVICE(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030), },
-	
-
-	{ 0, }
-};
-
 #define MAX_PCI_MRF_DEVICES (MAX_MNG_DEVS - 1)
 #define HW_INFO_SIZE 1024
 
@@ -210,6 +164,67 @@ struct pci_mrf_data {
 	struct pci_dev *pcidev;
 };
 
+enum {
+	CLEAN_SLOT,
+	CLEAN_PCI_ENABLE,
+	CLEAN_REQUEST_MEM,
+	CLEAN_PLX_STUFF,
+	CLEAN_IOREMAP,
+	CLEAN_MNG_DEV_CREATE,
+
+	CLEAN_ALL = CLEAN_MNG_DEV_CREATE
+};
+
+
+
+
+
+static const struct pci_device_id evrma_pci_ids[] = {
+
+	{ PCI_DEVICE(PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PMCEVR230), },
+	{ PCI_DEVICE(PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVR300), },
+	{ PCI_DEVICE(PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PCIEEVR300), },
+	{ PCI_DEVICE(PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVRTG300), },
+
+	// this #if LINUX_VERSION_CODE is only because PCI_DEVICE_SUB is not defined. If you really
+	// needed the support you have to find out how to do it.
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,8,00)
+
+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PMCEVR230), },
+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVR300), },
+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PCIEEVR300), },
+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVRTG300), },
+// 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PMCEVR200), },
+
+	{ PCI_DEVICE_SUB(PCI_ANY_ID, PCI_ANY_ID, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PMCEVR230), },
+	{ PCI_DEVICE_SUB(PCI_ANY_ID, PCI_ANY_ID, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVR300), },
+	{ PCI_DEVICE_SUB(PCI_ANY_ID, PCI_ANY_ID, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PCIEEVR300), },
+	{ PCI_DEVICE_SUB(PCI_ANY_ID, PCI_ANY_ID, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVRTG300), },
+
+#endif
+	
+	// Signal processing controller: SLAC National Accelerator Lab PPA-REG PCI-Express EVR
+    //    Subsystem: SLAC National Accelerator Lab PPA-REG PCI-Express EVR
+	{ PCI_DEVICE(PCI_VENDOR_ID_XILINX_PCIE, PCI_DEVICE_ID_XILINX_PCIE), },
+	
+#ifdef DEBUG_EMCOR_CARD
+	{ PCI_DEVICE(EMCOR_PCI_VENDOR, EMCOR_PCI_DEVICE), },
+#endif
+
+// 	// Signal processing controller: Lattice Semiconductor Corporation Device ec30 (rev 01)
+//     //    Subsystem: Device 1a3e:172c
+// 	{ PCI_DEVICE(0x1204, 0xec30), },
+	
+// 	
+// 	// Signal processing controller: PLX Technology, Inc. PCI9030 32-bit 33MHz PCI <-> IOBus Bridge (rev 01)
+//     //    Subsystem: Device 1a3e:11e6
+// 	{ PCI_DEVICE(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030), },
+	
+
+	{ 0, }
+};
+
+
 static struct pci_mrf_data pci_mrf_data[MAX_PCI_MRF_DEVICES];
 
 static int pci_mrf_major, pci_mrf_minor_start;
@@ -242,17 +257,6 @@ static void be_write_u32(struct pci_mrf_data *ev_device, u32 offset, u32 value)
 {
 	write_u32(ev_device, offset, cpu_to_be32(value));
 }
-
-enum {
-	CLEAN_SLOT,
-	CLEAN_PCI_ENABLE,
-	CLEAN_REQUEST_MEM,
-	CLEAN_PLX_STUFF,
-	CLEAN_IOREMAP,
-	CLEAN_MNG_DEV_CREATE,
-
-	CLEAN_ALL = CLEAN_MNG_DEV_CREATE
-};
 
 static void cleanup(struct pci_mrf_data *ev_device, int what)
 {

@@ -29,6 +29,8 @@ MODULE_VERSION("1.0.0");
 
 #define EVR_DRV_NAME "evrma_drv"
 
+#define NUM_MINORS 256
+
 /*
  * to protect the test device calls
  */
@@ -47,8 +49,6 @@ static struct modac_mngdev_des test_mngdev_des = {
 	io_rw: &evr_sim_rw_plugin,
 };
 
-
-#define NUM_MINORS 256
 
 static int __init evrma_init(void)
 {

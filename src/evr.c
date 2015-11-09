@@ -22,6 +22,14 @@
 // even if the property is 0-bit wide, it is still settable, because it's always 1 in that case
 #define MAX_FOR_BIT_INFO(BITS) (u32)((BITS == 0) ? 1 : (((1UL << (BITS)) - 1)))
 
+enum {
+	CLEAN_RES,
+	CLEAN_DATA,
+	CLEAN_SIM,
+	CLEAN_ALL = CLEAN_SIM
+};
+
+
 // ------ General EVR definitions ------------------------------------------
 // 
 // Taken from EVR-MRM-007.pdf.
@@ -205,13 +213,6 @@ static const struct evr_type_data adhoc_evr_type_emcor = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-
-enum {
-	CLEAN_RES,
-	CLEAN_DATA,
-	CLEAN_SIM,
-	CLEAN_ALL = CLEAN_SIM
-};
 
 int evr_card_is_slac(u32 fw_version)
 {
