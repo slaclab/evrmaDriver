@@ -1,0 +1,19 @@
+ Release Notes for the evrmaDriver package
+-------------------------------------------
+
+evrmaDriver-R1-0-p2: 2015-11-09 S. Gruden
+	* added RELEASE_NOTES
+
+evrmaDriver-R1-0-p1: 2015-11-05 S. Gruden
+	* added description of /sys/class/modac-virt/vevrX/config
+	* rewritten the direct access lock
+	* bug fix: proper VIRT_DEV cleanup
+	* code cleanup (reordered declarations and definitions, added 'inline' 
+	  keyword when appropriate, removed unnecessary frames on stack,
+	  using enums to increase readability, ...)
+
+evrmaDriver-R1-0: 2015-11-05 S. Gruden
+	* Initial release
+
+
+
