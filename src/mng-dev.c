@@ -34,6 +34,12 @@ enum {
 	CLEAN_SYS_ALL = CLEAN_SYS_VDEV
 };
 
+/* Event usage type */
+enum {
+	EUT_REGULAR_EVENT = 0,
+	EUT_NOTIFY_ONLY = 1,
+};
+
 #define NO_PID 0
 
 /*
@@ -216,6 +222,7 @@ static void init_dev(struct mngdev_data *mngdev)
 	
 	mngdev->pid = NO_PID;
 	
+	/* Initial register range for debugging */
 	mngdev->regs_offset = 0;
 	mngdev->regs_length = 1024;
 
@@ -957,8 +964,8 @@ static void irq_process(void *subscriber, void *arg_a)
 }
 
 /* Called from an IRQ. */
-static void modac_mngdev_process_event(struct modac_mngdev_des *devdes, int notify_only,
-	int event, void *data, int length)
+static void modac_mngdev_process_event(struct modac_mngdev_des *devdes, 
+		int event_usage_type, int event, void *data, int length)
 {
 	struct mngdev_data *mngdev = (struct mngdev_data *)devdes->priv;
 	struct irq_process_arg arg;
@@ -967,7 +974,7 @@ static void modac_mngdev_process_event(struct modac_mngdev_des *devdes, int noti
 		atomic_inc(&mngdev->event_counters[event]);
 	}
 
-	arg.notify_only = notify_only;
+	arg.notify_only = (event_usage_type == EUT_NOTIFY_ONLY);
 	arg.event = event;
 	arg.data = data;
 	arg.length = length;
@@ -1243,12 +1250,12 @@ void modac_mngdev_put_event(struct modac_mngdev_des *devdes,
 	int event, void *data, int length
 )
 {
-	modac_mngdev_process_event(devdes, 0, event, data, length);
+	modac_mngdev_process_event(devdes, EUT_REGULAR_EVENT, event, data, length);
 }
 
 void modac_mngdev_notify(struct modac_mngdev_des *devdes, int event)
 {
-	modac_mngdev_process_event(devdes, 1, event, NULL, 0);
+	modac_mngdev_process_event(devdes, EUT_NOTIFY_ONLY, event, NULL, 0);
 }
 
 
