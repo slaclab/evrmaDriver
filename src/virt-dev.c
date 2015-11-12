@@ -198,22 +198,20 @@ static inline int lock_direct_call(struct modac_vdev_des *vdev_des)
 	* protected by this mechanism in case of hot-unplug.
 	*/
 	
-	int denied;
-	
+	int retval;
+
 	spin_lock(&vdev_des->direct_access_spinlock);
-	vdev_des->direct_access_active_count ++;
-	spin_unlock(&vdev_des->direct_access_spinlock);
 	
-	spin_lock(&vdev_des->direct_access_spinlock);
-	denied = vdev_des->direct_access_denied;
-	spin_unlock(&vdev_des->direct_access_spinlock);
-	
-	if(denied) {
-		unlock_direct_call(vdev_des);
-		return 0;
+	if (vdev_des->direct_access_denied) {
+		retval = 0;
+	} else {
+		vdev_des->direct_access_active_count ++;
+		retval = 1;
 	}
-	
-	return 1;
+
+	spin_unlock(&vdev_des->direct_access_spinlock);
+
+	return retval;
 }
 
 
