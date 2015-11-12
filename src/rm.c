@@ -218,7 +218,7 @@ int modac_rm_alloc(struct modac_rm_data *rm_data,
 			 */
 			if(res_state->array_index != fixed_inx) continue;
 			
-			if(res_state->owner == owner) {
+			if(res_state->owner != NO_OWNER) {
 				/*
 				 * found, but already allocated by the owner
 				 */
