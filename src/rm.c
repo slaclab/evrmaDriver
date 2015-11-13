@@ -220,7 +220,7 @@ int modac_rm_alloc(struct modac_rm_data *rm_data,
 			
 			if(res_state->owner != NO_OWNER) {
 				/*
-				 * found, but already allocated by the owner
+				 * found, but already allocated
 				 */
 				return -EADDRINUSE;
 			}
