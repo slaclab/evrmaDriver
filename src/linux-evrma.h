@@ -3,7 +3,7 @@
 
 #include "linux-modac.h"
 
-#define DBG_MEASURE_TIME_FROM_IRQ_TO_USER
+//## #define DBG_MEASURE_TIME_FROM_IRQ_TO_USER
 
 
 /** @file */
