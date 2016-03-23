@@ -6,7 +6,7 @@ KERNELDIR := $(BUILDROOT_HOME)/buildroot-2015.02-x86_64/output/build/linux-3.18.
 
 all:
 	### copy the sources to make a directory for building
-#	cp -r ../src/* .
+	cp -r ../src/* .
 	$(MAKE) compile
 
 evrma-objs	+= main_evrma.o mng-dev.o virt-dev.o rm.o packet-queue.o 
