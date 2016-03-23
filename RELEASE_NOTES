@@ -1,6 +1,37 @@
  Release Notes for the evrmaDriver package
 -------------------------------------------
 
+evrmaDriver-R1-0-p5: 2016-03-24 K. Kim
+
+	* update pci-id table to support MRF PMC EVR-230/300
+          for earlier linux kernel version than 3.8
+		- src/pci-evr.c
+
+	* fix interrupt handling:  
+		- src/evr-irq-event.c
+
+	1. DUBF interrupt: read out data buffer first than clear the interrupt
+		- If we clear interrupt first, the interrupt will be occured again
+		  during read out the buffer. It could make duplicated interrupt,
+		  and we see the symptom in SLAC-EVR. The second interrupt (duplicated
+                  interrupt) will give invalid data buffer, and NO_DATA error on user space.
+		- SLAC EVR has slightly different interupt clearing mechanism.
+		  We need to set DBUF bit in IRQ status register first then need to unset the bit.
+		  MRF EVR doesn't require the second step (unset the bit).
+
+	2. FIFO event interrupt: readout event from FIFO until the FIFO is empty
+				 then clear the interrupt
+		- If we clear interrupt first, it immediately generate another interrupt due to the
+		  FIFO is still no empty.
+		- So, we need to read out FIFO until the FIFO is empty, then need to clear the interupt
+		- it give us another benefit for system performance.
+		  Since, most of events (except event#1) are occured almost same time, So, we can handle
+		  most of events at one interrupt.
+
+	3. FIFO full interrupt: handle and notify first then clear the interrupt
+
+	4. Other interrupt: clear interrupt first then handle it
+
 evrmaDriver-R1-0-p4: 2015-11-18 S. Gruden
 	* Enabled DBG_MEASURE_TIME_FROM_IRQ_TO_USER.
 
