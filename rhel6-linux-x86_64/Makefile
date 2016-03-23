@@ -1,7 +1,4 @@
-### TEST DEBUG: this is the same as for the buildroot-2014.08-glibc-x86_64????
-BUILDROOT_HOME = /afs/slac/g/lcls/package/linuxRT/buildroot-2014.11/
-XCROSS_HOME := $(BUILDROOT_HOME)/host/linux-x86_64/x86_64-glibc-linux/usr/bin/x86_64-buildroot-linux-gnu-
-KERNELDIR := $(BUILDROOT_HOME)/buildroot-uclibc-x86_64/output/build/linux-3.14.12/ 
+KERNELDIR ?= /lib/modules/$(shell uname -r)/build
 
 all:
 	### copy the sources to make a directory for building
@@ -17,7 +14,7 @@ evrma-objs	+= evr-sim.o event-list.o
 obj-m += evrma.o
 
 compile:
-	$(MAKE) ARCH=x86 CROSS_COMPILE=$(XCROSS_HOME) -C $(KERNELDIR) M=$(PWD) modules
+	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
 
 clean:
 	rm -rf *.o *~ core .depend .*.cmd *.ko *.mod.c .tmp_versions *.c *.h
