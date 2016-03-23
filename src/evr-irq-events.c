@@ -50,13 +50,18 @@ irqreturn_t hw_support_evr_isr(struct modac_hw_support_data *hw_support_data, vo
 	irq_flags = evr_read32(hw_support_data, EVR_REG_IRQFLAG);
 	
 	{
-        /* Clear everything but FIFOFULL. */
+        /* Clear everything except FIFOFULL, DATABUF and EVENT*/
+        /* For SLAC-EVR, the DATABUF interrupt should be handle first,
+ 	                 re-enable single load then need to clear the inttupt.
+	                 To clear data buffer interrupt, need to set DATABUF bit then need to unset the bit.
+	   For event FIFO interrupt, both MRF and SLAC EVR need to make FIFO empty first then clear the interrupt.
+	*/
+
 		
-		u32 irq_flags_no_fifo_full = irq_flags & ~EVR_IRQFLAG_FIFOFULL;
+		u32 irq_flags_clear = irq_flags & ~EVR_IRQFLAG_FIFOFULL & ~EVR_IRQFLAG_DATABUF & ~EVR_IRQFLAG_EVENT;
 		
-        if(irq_flags_no_fifo_full){
-			evr_write32(hw_support_data, EVR_REG_IRQFLAG, irq_flags_no_fifo_full);
-			evr_write32(hw_support_data, EVR_REG_IRQFLAG, 0); // for SLAC card
+       		if(irq_flags_clear){
+			evr_write32(hw_support_data, EVR_REG_IRQFLAG, irq_flags_clear);
 			barrier();
 		}
 	}
@@ -118,6 +123,9 @@ irqreturn_t hw_support_evr_isr(struct modac_hw_support_data *hw_support_data, vo
 		modac_mngdev_put_event(devdes, EVRMA_EVENT_DBUF_DATA, NULL, 0);
 #endif
 
+		evr_write32(hw_support_data, EVR_REG_IRQFLAG, EVR_IRQFLAG_DATABUF);
+		evr_write32(hw_support_data, EVR_REG_IRQFLAG, 0); 
+
 	}
 	
 	if(irq_flags & EVR_IRQFLAG_EVENT) {
@@ -148,6 +156,8 @@ irqreturn_t hw_support_evr_isr(struct modac_hw_support_data *hw_support_data, vo
 		if(ilim < 1) {
 			printk(KERN_WARNING "EVR FIFO event max. read count reached.");
 		}
+
+		evr_write32(hw_support_data, EVR_REG_IRQFLAG, EVR_IRQFLAG_EVENT);
 	}
 
 	if(irq_flags & EVR_IRQFLAG_FIFOFULL) {
@@ -158,7 +168,6 @@ irqreturn_t hw_support_evr_isr(struct modac_hw_support_data *hw_support_data, vo
 		evr_write32(hw_support_data, EVR_REG_CTRL, ctrl);
 
 		evr_write32(hw_support_data, EVR_REG_IRQFLAG, EVR_IRQFLAG_FIFOFULL);
-		evr_write32(hw_support_data, EVR_REG_IRQFLAG, 0); // for SLAC card
 		
 		modac_mngdev_notify(devdes, EVRMA_EVENT_ERROR_LOST);
 		
