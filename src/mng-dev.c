@@ -1198,8 +1198,8 @@ static ssize_t show_events(struct device *dev, struct device_attribute *attr,
  */
 static struct device_attribute dev_attr_misc[] = {
 	__ATTR(alloc, S_IRUGO, show_alloc, NULL),
-	__ATTR(dbg, S_IRUGO | S_IWUGO, show_dbg, store_dbg),
-	__ATTR(regs, S_IRUGO | S_IWUGO, show_hw_regs, store_hw_regs),
+	__ATTR(dbg, 0660, show_dbg, store_dbg),
+	__ATTR(regs, 0660, show_hw_regs, store_hw_regs),
 	__ATTR(events, S_IRUGO, show_events, NULL),
 	__ATTR(hw_info, S_IRUGO, show_hw_info, NULL),
 

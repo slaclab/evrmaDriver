@@ -700,7 +700,7 @@ static ssize_t store_config(struct device *dev, struct device_attribute *attr,
 }
 
 static struct device_attribute dev_attr_misc[] = {
-	__ATTR(config, S_IRUGO | S_IWUGO, show_config, store_config),
+	__ATTR(config, 0660, show_config, store_config),
 
 	__ATTR_NULL
 };
