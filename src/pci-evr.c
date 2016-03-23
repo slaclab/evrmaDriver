@@ -181,10 +181,26 @@ enum {
 
 static const struct pci_device_id evrma_pci_ids[] = {
 
-	{ PCI_DEVICE(PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PMCEVR230), },
-	{ PCI_DEVICE(PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVR300), },
-	{ PCI_DEVICE(PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PCIEEVR300), },
-	{ PCI_DEVICE(PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVRTG300), },
+	{  .vendor = PCI_VENDOR_ID_PLX,
+	   .device = PCI_DEVICE_ID_PLX_9030,
+	   .subvendor = PCI_VENDOR_ID_MRF,
+	   .subdevice = PCI_DEVICE_ID_MRF_PMCEVR230, },
+
+	{  .vendor = PCI_VENDOR_ID_PLX,
+	   .device = PCI_DEVICE_ID_PLX_9030,
+	   .subvendor = PCI_VENDOR_ID_MRF,
+	   .subdevice = PCI_DEVICE_ID_MRF_CPCIEVR300, },
+
+	{  .vendor = PCI_VENDOR_ID_PLX,
+	   .device = PCI_DEVICE_ID_PLX_9030,
+	   .subvendor = PCI_VENDOR_ID_MRF,
+	   .subdevice = PCI_DEVICE_ID_MRF_PCIEEVR300, },
+
+	{ .vendor = PCI_VENDOR_ID_PLX,
+	  .device = PCI_DEVICE_ID_PLX_9030,
+	  .subvendor = PCI_VENDOR_ID_MRF,
+	  .subdevice = PCI_DEVICE_ID_MRF_CPCIEVRTG300, },
+
 
 	// this #if LINUX_VERSION_CODE is only because PCI_DEVICE_SUB is not defined. If you really
 	// needed the support you have to find out how to do it.
