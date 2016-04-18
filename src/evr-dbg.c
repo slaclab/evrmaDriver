@@ -393,6 +393,10 @@ ssize_t hw_support_evr_dbg_info(struct modac_hw_support_data *hw_support_data,
 	} else {
 		n += scnprintf(buf + n, count - n, "%s", hw_data->evr_type_data.name);
 		n += scnprintf(buf + n, count - n, ", hw_support_hint1=%d", hw_support_data->mngdev_des->hw_support_hint1);
+		if(evr_card_is_slac(hw_data->fw_version)) {
+			n += scnprintf(buf + n, count - n, ", temperature_reg=0x%03x",
+			               swab32(evr_read32(hw_support_data, AXIXADC_REG_TEMPERATURE)) >> 4 & 0xfff);
+		}
 	}
 	return n;
 }
