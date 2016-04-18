@@ -51,6 +51,7 @@
 // temperature register in AxiXadc peripheral
 #define AXIXADC_PERIPHERAL_DEV          0x00030000
 #define AXIXADC_REG_TEMPERATURE		(AXIXADC_PERIPHERAL_DEV+0x200)
+#define AXIXADC_REG_MAXTEMPERATURE	(AXIXADC_PERIPHERAL_DEV+0x280)
 /**
  * @}
  */

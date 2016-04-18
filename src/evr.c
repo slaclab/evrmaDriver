@@ -692,6 +692,21 @@ static long hw_support_evr_direct_ioctl(struct modac_hw_support_data *hw_support
 		ret = 0;
 		break;
 	}
+
+	case VEVR_IOC_AXIXADC_MAXTEMPERATURE_GET:
+	{
+		struct evr_hw_data *hw_data = hw_support_data->priv;
+		u32 val;
+		if(evr_card_is_slac(hw_data->fw_version))
+			val = swab32(evr_read32(hw_support_data, AXIXADC_REG_MAXTEMPERATURE)) >> 4 & 0xfff;
+		else
+			val = 0;
+		if (copy_to_user((void *)arg, &val, sizeof(u32))) {
+			return -EFAULT;
+		}
+		ret = 0;
+		break;
+	}
 	
 	} // switch
 	

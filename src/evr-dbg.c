@@ -396,6 +396,9 @@ ssize_t hw_support_evr_dbg_info(struct modac_hw_support_data *hw_support_data,
 		if(evr_card_is_slac(hw_data->fw_version)) {
 			n += scnprintf(buf + n, count - n, ", temperature_reg=0x%03x",
 			               swab32(evr_read32(hw_support_data, AXIXADC_REG_TEMPERATURE)) >> 4 & 0xfff);
+
+			n += scnprintf(buf + n, count - n, ", max_temperature_reg=0x%03x",
+			               swab32(evr_read32(hw_support_data, AXIXADC_REG_MAXTEMPERATURE)) >> 4 & 0xfff);
 		}
 	}
 	return n;
