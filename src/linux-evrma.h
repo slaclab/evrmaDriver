@@ -295,6 +295,14 @@ struct vevr_ioctl_status {
 #define VEVR_IOC_LATCHED_TIMESTAMP_GET	\
 	_IOWR(VIRT_DEV_IOC_MAGIC, VIRT_DEV_HW_DIRECT_IOC_MIN + 0, uint32_t)
 
+/**
+ * Reads out temperature register, in AxiXadc
+ * AxiXadc, address: 0x00030000
+ * temperature register, offset: 0x200
+ */
+#define VEVR_IOC_AXIXADC_TEMPERATURE_GET \
+	_IOWR(VIRT_DEV_IOC_MAGIC, VIRT_DEV_HW_DIRECT_IOC_MIN + 1, uint32_t)
+
 
 
 /**
