@@ -1107,7 +1107,7 @@ static ssize_t show_hw_regs(struct device *dev, struct device_attribute *attr,
 	ret = mngdev_devref_lock(mngdev);
 	if(ret)
 		return ret;
-	
+
 	if(mngdev->des->hw_support->dbg_regs != NULL) {
 		ret = mngdev->des->hw_support->dbg_regs(&mngdev->hw_support_data,
 				mngdev->regs_offset, mngdev->regs_length,
