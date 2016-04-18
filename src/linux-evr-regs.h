@@ -48,6 +48,9 @@
 
 // What's right? The DOC says this is 0x6000, but in the code 0x5000 is used everywhere
 #define EVR_REG_MAPRAM2			0x5000
+// temperature register in AxiXadc peripheral
+#define AXIXADC_PERIPHERAL_DEV          0x00030000
+#define AXIXADC_REG_TEMPERATURE		(AXIXADC_PERIPHERAL_DEV+0x200)
 /**
  * @}
  */
