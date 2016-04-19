@@ -1,6 +1,9 @@
  Release Notes for the evrmaDriver package
 -------------------------------------------
 
+evrmaDriver-R1-0-p6: 2016-04-18 K. Kim
+	* implement temperature reading
+
 evrmaDriver-R1-0-p5: 2016-03-24 K. Kim
 
 	* update pci-id table to support MRF PMC EVR-230/300
