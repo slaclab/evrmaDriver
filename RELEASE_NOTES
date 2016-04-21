@@ -3,6 +3,7 @@
 
 evrmaDriver-R1-0-p6: 2016-04-18 K. Kim
 	* implement temperature reading
+	* print out firmware version inot hw_info virtual file
 
 evrmaDriver-R1-0-p5: 2016-03-24 K. Kim
 
