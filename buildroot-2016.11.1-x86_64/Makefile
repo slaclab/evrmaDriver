@@ -1,6 +1,13 @@
-BUILDROOT_HOME = /afs/slac/package/linuxRT/buildroot-2016.11.1
+BUILDROOT_VER=buildroot-2016.11.1
 
+BUILDROOT_HOME = /afs/slac/package/linuxRT/$(BUILDROOT_VER)
 ARCH=x86_64
+
+# ===============================================================
+# We don't want to use the compiler cache; especially since not
+# everyone has write access to the buildroot installation.
+# ===============================================================
+export CCACHE_DISABLE=1
 
 ### EVR testing machines
 XCROSS_HOME := $(BUILDROOT_HOME)/host/linux-x86_64/x86_64/usr/bin/x86_64-buildroot-linux-gnu-
