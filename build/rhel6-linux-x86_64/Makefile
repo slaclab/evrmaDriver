@@ -3,7 +3,7 @@ OUTPUT_DIR=../../rhel6-x86_64
 
 all:
 	### copy the sources to make a directory for building
-	cp -r ../src/* .
+	cp -r ../../src/* .
 	$(MAKE) compile
 	
 
