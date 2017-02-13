@@ -1,5 +1,9 @@
  Release Notes for the evrmaDriver package
 -------------------------------------------
+R1.0.7: 2017-02-13; E. Williams (ernesto)
+        * Fix ARCH to use X86_64 (64-bit machine and OS)
+        * Version naming convention to follow Controls
+          GIT Workflow.
 
 evrmaDriver-R1-0-p6: 2016-04-18 K. Kim
 	* implement temperature reading
