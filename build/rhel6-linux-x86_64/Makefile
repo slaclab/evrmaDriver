@@ -1,4 +1,5 @@
 KERNELDIR ?= /lib/modules/$(shell uname -r)/build
+OUTPUT_DIR=../../rhel6-x86_64
 
 all:
 	### copy the sources to make a directory for building
@@ -20,7 +21,9 @@ clean:
 	rm -rf *.o *~ core .depend .*.cmd *.ko *.ko.unsigned *.mod.c .tmp_versions *.symvers  *.order *.c *.h
  
 install:
-	# nothing to do at the moment
+	mkdir -p $(OUTPUT_DIR)/include/
+	cp  linux-evrma.h linux-evr-regs.h  $(OUTPUT_DIR)/include/.
+	cp  *.ko $(OUTPUT_DIR)/.
 	
 
 	

@@ -2,6 +2,7 @@ BUILDROOT_VER=buildroot-2016.11.1
 
 BUILDROOT_HOME = /afs/slac/package/linuxRT/$(BUILDROOT_VER)
 ARCH=x86_64
+OUTPUT_DIR=../../buildroot-2016.11.1-x86_64
 
 # ===============================================================
 # We don't want to use the compiler cache; especially since not
@@ -15,7 +16,7 @@ KERNELDIR := $(BUILDROOT_HOME)/buildroot-2016.11.1-x86_64/output/build/linux-4.8
 
 all:
 	### copy the sources to make a directory for building
-	cp -r ../src/* .
+	cp -r ../../src/* .
 	$(MAKE) compile
 
 evrma-objs	+= main_evrma.o mng-dev.o virt-dev.o rm.o packet-queue.o 
@@ -32,8 +33,7 @@ clean:
 	rm -rf *.o *~ core .depend .*.cmd *.ko *.mod.c .tmp_versions *.symvers  *.order *.c *.h
  
 install:
-	# nothing to do at the moment
-	
-	
-	
+	mkdir -p $(OUTPUT_DIR)/include/
+	cp  linux-evrma.h linux-evr-regs.h  $(OUTPUT_DIR)/include/.
+	cp  *.ko $(OUTPUT_DIR)/.
 
