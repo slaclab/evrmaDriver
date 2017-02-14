@@ -3,7 +3,7 @@ OUTPUT_DIR=../../buildroot-2014.08-glibc-x86_64
 
 ### EVR testing machines
 XCROSS_HOME := $(BUILDROOT_HOME)/host/linux-x86_64/x86_64-glibc-linux/usr/bin/x86_64-buildroot-linux-gnu-
-KERNELDIR := $(BUILDROOT_HOME)/buildroot-2014.08-glibc-x86_64/output/build/linux-3.14.12/
+KERNELDIR := $(BUILDROOT_HOME)/buildroot-glibc-x86_64/output/build/linux-3.14.12/
 
 all:
 	### copy the sources to make a directory for building
