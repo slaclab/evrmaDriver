@@ -25,6 +25,6 @@ clean:
  
 install:
 	mkdir -p $(OUTPUT_DIR)/include/
-	cp  linux-evrma.h linux-evr-regs.h  $(OUTPUT_DIR)/include/.
+	cp  linux-evrma.h linux-evr-regs.h  linux-modac.h $(OUTPUT_DIR)/include/.
 	cp  *.ko $(OUTPUT_DIR)/.
 
