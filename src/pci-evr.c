@@ -81,8 +81,11 @@
 // OTHER
 
 #define PCI_VENDOR_ID_PLX             0x10b5   /* PCI Vendor ID for PLX Technology, Inc.          */
-
 #define PCI_DEVICE_ID_PLX_9030        0x9030   /* PCI Device ID for PLX-9030 bridge chip          */
+#define PCI_VENDOR_ID_LATTICE         0x1204   /* PCI Vendor ID for Lattice Semiconductor Corp.   */
+#define PCI_DEVICE_ID_LATTICE_ECP3    0xec30   /* PCI Device ID for Lattice-ecp30 bridge chip      */
+
+
 
 /* SLAC values */
 #define PCI_VENDOR_ID_XILINX_PCIE   0x1A4A
@@ -201,15 +204,21 @@ static const struct pci_device_id evrma_pci_ids[] = {
 	  .subvendor = PCI_VENDOR_ID_MRF,
 	  .subdevice = PCI_DEVICE_ID_MRF_CPCIEVRTG300, },
 
+        { .vendor = PCI_VENDOR_ID_LATTICE,
+          .device = PCI_DEVICE_ID_LATTICE_ECP3,
+          .subvendor = PCI_VENDOR_ID_MRF,
+          .subdevice = PCI_DEVICE_ID_MRF_PCIEEVR300,  }, 
+
 
 	// this #if LINUX_VERSION_CODE is only because PCI_DEVICE_SUB is not defined. If you really
 	// needed the support you have to find out how to do it.
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,8,00)
-
 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PMCEVR230), },
 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVR300), },
 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PCIEEVR300), },
 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_CPCIEVRTG300), },
+
+        { PCI_DEVICE_SUB(PCI_VENDOR_ID_LATTICE, PCI_DEVICE_ID_LATTICE_ECP3, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PCIEEVR300), },
 // 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9030, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PMCEVR200), },
 
 	{ PCI_DEVICE_SUB(PCI_ANY_ID, PCI_ANY_ID, PCI_VENDOR_ID_MRF, PCI_DEVICE_ID_MRF_PMCEVR230), },
