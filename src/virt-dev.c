@@ -547,7 +547,11 @@ static void vdev_vma_close(struct vm_area_struct *vma)
 {
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,139)
+static int vdev_vma_fault(struct vm_fault *vmf)
+#else
 static int vdev_vma_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+#endif
 {
 	printk(KERN_WARNING "'vdev_vma_fault' happened\n");
     return VM_FAULT_SIGBUS;

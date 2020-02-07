@@ -6,6 +6,12 @@
 #include <linux/poll.h>
 #include <linux/wait.h>
 #include <linux/sched.h>
+
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,139)
+#include <linux/sched/signal.h>
+#endif
+
 #include <linux/slab.h>
 #include <linux/mutex.h>
 #include <linux/version.h>
