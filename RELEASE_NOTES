@@ -1,5 +1,7 @@
  Release Notes for the evrmaDriver package
 -------------------------------------------
+R1.0.9: 2020-02-07; K. Kim (khkim)
+        * support buildroot-2019.08
 
 R1.0.8: 2017-09-22; K. Kim (khkim)
         * add lattice bridge chip support for PCI-E EVR300
