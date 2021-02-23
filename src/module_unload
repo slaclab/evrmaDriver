@@ -1,0 +1,19 @@
+#!/bin/bash
+
+KMOD=evrma.ko
+
+echo -n "Unload kernel module ${KMOD}: "
+/sbin/rmmod `basename ${KMOD} .ko`
+RETVAL=$?
+rm -rf /dev/vevr0
+RETVAL=$(( $RETVAL + $?))
+rm -rf /dev/evr0mng
+RETVAL=$(( $RETVAL + $?))
+if [ "$RETVAL" -eq 0 ]; then
+    echo "${KMOD} shutdown successful"
+else
+    echo "${KMOD} shutdown failed"
+fi
+
+exit $RETVAL
+

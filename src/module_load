@@ -1,0 +1,102 @@
+#!/bin/bash
+
+KMOD_PATH=/usr/local/lcls/package/linuxKernel_Modules/evrmaDriver/R1.0.9/rhel6-x86_64/evrma.ko
+CMD_PATH=/usr/local/lcls/package/evrManager/R1.0.9/rhel6-linux-x86_64/bin/evrManager
+
+if [ -f ${KMOD_PATH} ]; then
+    KMOD=`basename ${KMOD_PATH}`
+    KMOD_DIR=`dirname ${KMOD_PATH}`
+else
+    echo "${KMOD_PATH} not found"
+    exit 1
+fi
+
+if [ -f ${CMD_PATH} ]; then
+    CMD=`basename ${CMD_PATH}`
+    CMD_DIR=`dirname ${CMD_PATH}`
+else
+    echo "${CMD_PATH} not found"
+    exit 1
+fi
+
+RETVAL=0
+
+echo -n "Inserting kernel module ${KMOD} : "
+cd ${KMOD_DIR}
+insmod ${KMOD}
+RETVAL=$?
+if [ "$RETVAL" -eq 0 ]; then
+    echo "${KMOD} insert successful "
+else
+    echo "${KMOD} insert failed"
+    exit $RETVAL
+fi
+chmod 666 /dev/evr0mng
+
+echo -n "Initialize EVR card /dev/evr0mng : "
+cd ${CMD_DIR}
+./${CMD} /dev/evr0mng init
+RETVAL=$?
+if [ "$RETVAL" -eq 0 ]; then
+    echo "${CMD} init successful"
+else
+    echo "${CMD} init failed"
+    exit $RETVAL
+fi
+
+echo -n "Create virtual EVR card /dev/vevr0 : "
+./${CMD} /dev/evr0mng create vevr0
+RETVAL=$?
+sleep 2
+chmod 666 /dev/vevr0
+if [ "$RETVAL" -eq 0 ]; then
+    echo "${CMD} create vevr0 successful"
+else
+    echo "${CMD} create vevr0 failed"
+    exit $RETVAL
+fi
+
+echo -n "Allocate outputs on /dev/vevr0 : "
+./evrManager /dev/evr0mng alloc vevr0 output 0
+RETVAL=$?
+./evrManager /dev/evr0mng alloc vevr0 output 1
+RETVAL=$(( $RETVAL + $?))
+./evrManager /dev/evr0mng alloc vevr0 output 2
+RETVAL=$(( $RETVAL + $?))
+if [ "$RETVAL" -eq 0 ]; then
+    echo "${CMD} allocate outputs successful"
+else
+    echo "${CMD} allocate outputs failed"
+    exit $RETVAL
+fi
+
+echo -n "Allocate pulse generators on /dev/vevr0 : "
+./evrManager /dev/evr0mng alloc vevr0 pulsegen
+RETVAL=$?
+./evrManager /dev/evr0mng alloc vevr0 pulsegen
+RETVAL=$(( $RETVAL + $?))
+./evrManager /dev/evr0mng alloc vevr0 pulsegen
+RETVAL=$(( $RETVAL + $?))
+if [ "$RETVAL" -eq 0 ]; then
+    echo "${CMD} allocate pulse generators successful"
+else
+    echo "${CMD} allocate pulse generators failed"
+    exit $RETVAL
+fi
+
+echo -n "Map pulse generators to outputs on /dev/vevr0 : "
+./evrManager /dev/evr0mng output vevr0 0 P 0
+RETVAL=$?
+./evrManager /dev/evr0mng output vevr0 1 P 1
+RETVAL=$(( $RETVAL + $?))
+./evrManager /dev/evr0mng output vevr0 2 P 2
+RETVAL=$(( $RETVAL + $?))
+if [ "$RETVAL" -eq 0 ]; then
+    echo "${CMD} map pulse gens to outputs successful"
+else
+    echo "${CMD} map pulse gens to outputs failed"
+    exit $RETVAL
+fi
+
+exit $RETVAL
+

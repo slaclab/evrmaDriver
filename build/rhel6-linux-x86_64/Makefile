@@ -4,6 +4,7 @@ OUTPUT_DIR=../../rhel6-x86_64
 all:
 	### copy the sources to make a directory for building
 	cp -r ../../src/* .
+	chmod a+x module_*
 	$(MAKE) compile
 	
 
@@ -18,13 +19,13 @@ compile:
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
 
 clean:
-	rm -rf *.o *~ core .depend .*.cmd *.ko *.ko.unsigned *.mod.c .tmp_versions *.symvers  *.order *.c *.h
+	rm -rf *.o *~ core .depend .*.cmd *.ko *.ko.unsigned *.mod.c .tmp_versions *.symvers  *.order *.c *.h module_*
  
 install:
 	mkdir -p $(OUTPUT_DIR)/include/
 	cp  linux-evrma.h linux-evr-regs.h linux-modac.h  $(OUTPUT_DIR)/include/.
 	cp  *.ko $(OUTPUT_DIR)/.
-	
+	cp module_* $(OUTPUT_DIR)/.
 
 	
 	
