@@ -1,3 +1,11 @@
 *.h
 *.c
+.*.cmd
+.tmp_versions
+*.o
+*.ko
+*.ko.unsigned
+*.order
+*.symvers
+module_*
 

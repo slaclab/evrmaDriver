@@ -8,9 +8,9 @@ all:
 	$(MAKE) compile
 	
 
-evrma-objs	+= main_evrma.o mng-dev.o virt-dev.o rm.o packet-queue.o 
-evrma-objs	+= evr.o evr-irq-events.o evr-dbg.o 
-evrma-objs	+= plx.o pci-evr.o 
+evrma-objs	+= main_evrma.o mng-dev.o virt-dev.o rm.o packet-queue.o
+evrma-objs	+= evr.o evr-irq-events.o evr-dbg.o
+evrma-objs	+= plx.o pci-evr.o
 evrma-objs	+= evr-sim.o event-list.o
 
 obj-m += evrma.o
@@ -20,13 +20,10 @@ compile:
 
 clean:
 	rm -rf *.o *~ core .depend .*.cmd *.ko *.ko.unsigned *.mod.c .tmp_versions *.symvers  *.order *.c *.h module_*
- 
+
 install:
 	mkdir -p $(OUTPUT_DIR)/include/
 	cp  linux-evrma.h linux-evr-regs.h linux-modac.h  $(OUTPUT_DIR)/include/.
 	cp  *.ko $(OUTPUT_DIR)/.
 	cp module_* $(OUTPUT_DIR)/.
-
-	
-	
 
