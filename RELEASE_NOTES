@@ -1,7 +1,9 @@
  Release Notes for the evrmaDriver package
 -------------------------------------------
 R1.0.10: 2021-03-08  K. Kim (khkim)
-        *rhel6-linux-x86_64
+        * merge Jiga's R.1.0.10-br
+        * rename directory name build/rhel6-linux-x86_64 to build/rhel6-x86_64
+        * add build/rhel7-x86_64
 
 R1.0.9: 2020-02-07; K. Kim (khkim)
         * support buildroot-2019.08
