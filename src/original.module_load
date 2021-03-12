@@ -1,7 +1,7 @@
 #!/bin/bash
 
-KMOD_PATH=/usr/local/lcls/package/linuxKernel_Modules/evrmaDriver/current/rhel6-x86_64/evrma.ko
-CMD_PATH=/usr/local/lcls/package/evrManager/current/rhel6-linux-x86_64/bin/evrManager
+KMOD_PATH=/usr/local/lcls/package/linuxKernel_Modules/evrmaDriver/current/RHEL-x86_64/evrma.ko
+CMD_PATH=/usr/local/lcls/package/evrManager/current/RHEL-linux-x86_64/bin/evrManager
 
 if [ -f ${KMOD_PATH} ]; then
     KMOD=`basename ${KMOD_PATH}`
