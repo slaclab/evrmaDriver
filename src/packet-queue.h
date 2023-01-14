@@ -1,10 +1,9 @@
 #ifndef PACKET_QUEUE_H_
 #define PACKET_QUEUE_H_
 
+#ifdef DBG_MEASURE_TIME_FROM_IRQ_TO_USER
 // TODO: temporarily, to set DBG_MEASURE_TIME_FROM_IRQ_TO_USER
 #include "linux-evrma.h"
-
-#ifndef DBG_MEASURE_TIME_FROM_IRQ_TO_USER
 #warning **********************************************************************
 #warning **********************************************************************
 #warning **********************************************************************
@@ -13,8 +12,6 @@
 #warning **********************************************************************
 #warning **********************************************************************
 #endif
-
-
 
 /*
  * NOTE: According to Documentation/circular-buffers.txt all of these functions
