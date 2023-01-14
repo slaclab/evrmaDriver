@@ -1,6 +1,10 @@
  Release Notes for the evrmaDriver package
 -------------------------------------------
-R1.0.10: 2021-03-08  K. Kim (khkim)
+R1.0.11: 2023-01-13 Bruce Hill
+	Modify rhel7-x86_64 Makefile to build evrma.ko for each installed kernel src.
+	Modify packet-queue.h to suppress annoying warning
+
+R1.0.10: 2021-03-11  K. Kim (khkim)
         * merge Jiga's R.1.0.10-br
         * rename directory name build/rhel6-linux-x86_64 to build/rhel6-x86_64
         * add build/rhel7-x86_64
