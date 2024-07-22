@@ -16,6 +16,7 @@
 #include <linux/wait.h>
 #include <linux/sched.h>
 #include <linux/slab.h>
+#include <linux/version.h>
 
 #include "internal.h"
 #include "packet-queue.h"
@@ -32,7 +33,11 @@ int modac_cb_put(struct modac_circ_buf *cb, int event, void *data, int length,
 				   wait_queue_head_t *wait_queue_events)
 {
 	unsigned long head = cb->cb_events.head;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,0,0)
 	unsigned long tail = ACCESS_ONCE(cb->cb_events.tail);
+#else
+	unsigned long tail = READ_ONCE(cb->cb_events.tail);
+#endif
 	int space;
 	
 	if(length > CBUF_EVENT_ENTRY_DATA_LENGTH) {
@@ -83,8 +88,12 @@ int modac_cb_put(struct modac_circ_buf *cb, int event, void *data, int length,
 }
 
 int modac_cb_get(struct modac_circ_buf *cb, u8 *buf)
-{	
+{
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,0,0)
 	unsigned long head = ACCESS_ONCE(cb->cb_events.head);
+#else
+	unsigned long head = READ_ONCE(cb->cb_events.head);
+#endif
 	unsigned long tail = cb->cb_events.tail;
 
 	if(CIRC_CNT(head, tail, CBUF_EVENT_COUNT) > 0) {
@@ -92,7 +101,7 @@ int modac_cb_get(struct modac_circ_buf *cb, u8 *buf)
 		struct modac_circ_buf_entry *entry;
 		
 		/* read index before reading contents at that index */
-		smp_read_barrier_depends();
+		smp_mb();
 		
 		entry = &cb->buf[tail];
 		memcpy(buf, &entry->event, 2);
@@ -110,7 +119,11 @@ int modac_cb_get(struct modac_circ_buf *cb, u8 *buf)
 
 int modac_cb_available(struct modac_circ_buf *cb)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,0,0)
 	unsigned long head = ACCESS_ONCE(cb->cb_events.head);
+#else
+	unsigned long head = READ_ONCE(cb->cb_events.head);
+#endif
 	unsigned long tail = cb->cb_events.tail;
 
 	return CIRC_CNT(head, tail, CBUF_EVENT_COUNT) > 0;

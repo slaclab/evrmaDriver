@@ -860,7 +860,11 @@ static int evrma_pci_probe(struct pci_dev *pcidev, const struct pci_device_id *d
 			return -ENXIO;
 		}
 		
+    #if LINUX_VERSION_CODE < KERNEL_VERSION(5,5,0)
 		ev_device->emcor_io_ptr = ioremap_nocache(ev_device->emcor_start, ev_device->emcor_length);
+    #else
+		ev_device->emcor_io_ptr = ioremap(ev_device->emcor_start, ev_device->emcor_length);
+    #endif
 
 
 	} else 
@@ -887,7 +891,11 @@ static int evrma_pci_probe(struct pci_dev *pcidev, const struct pci_device_id *d
 	
 	current_clean = CLEAN_REQUEST_MEM;
 	
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,5,0)
 	ev_device->io_ptr = ioremap_nocache(ev_device->start, ev_device->length);
+#else
+	ev_device->io_ptr = ioremap(ev_device->start, ev_device->length);
+#endif
 	
 	if(ev_device->io_ptr == NULL) {
 		printk(KERN_ERR "evrma_pci_probe ioremap_nocache failed\n");
