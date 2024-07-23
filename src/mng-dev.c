@@ -585,9 +585,17 @@ static long mngdev_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned 
 	
 	/* Check access */
 	if (_IOC_DIR(cmd) & _IOC_READ) {
+    #if LINUX_VERSION_CODE < KERNEL_VERSION(5,0,0)
 		ret = !access_ok(VERIFY_WRITE, (void __user *)arg, _IOC_SIZE(cmd));
+    #else
+		ret = !access_ok((void __user *)arg, _IOC_SIZE(cmd));
+    #endif
 	} else if(_IOC_DIR(cmd) & _IOC_WRITE) {
+    #if LINUX_VERSION_CODE < KERNEL_VERSION(5,0,0)
 		ret = !access_ok(VERIFY_READ, (void __user *)arg, _IOC_SIZE(cmd));
+    #else
+		ret = !access_ok((void __user *)arg, _IOC_SIZE(cmd));
+    #endif
 	}
 	
 	if (ret) {
