@@ -38,6 +38,13 @@ $(K_VERS):
 	cp  *.ko $(OUTPUT_DIR)/.
 	cp module_* $(OUTPUT_DIR)/.
 
+install: OUTPUT_DIR=../../$(LINUX_VERSION)
+install:
+	mkdir -p $(OUTPUT_DIR)/include/
+	cp  linux-evrma.h linux-evr-regs.h linux-modac.h  $(OUTPUT_DIR)/include/.
+	cp  *.ko $(OUTPUT_DIR)/.
+	cp module_* $(OUTPUT_DIR)/.
+
 module_load: original.module_load
 	sed 's/RHEL/$(RHEL)/' $< >$@
 
