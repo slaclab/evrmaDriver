@@ -585,9 +585,17 @@ static long mngdev_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned 
 	
 	/* Check access */
 	if (_IOC_DIR(cmd) & _IOC_READ) {
+    #if LINUX_VERSION_CODE < KERNEL_VERSION(5,0,0)
 		ret = !access_ok(VERIFY_WRITE, (void __user *)arg, _IOC_SIZE(cmd));
+    #else
+		ret = !access_ok((void __user *)arg, _IOC_SIZE(cmd));
+    #endif
 	} else if(_IOC_DIR(cmd) & _IOC_WRITE) {
+    #if LINUX_VERSION_CODE < KERNEL_VERSION(5,0,0)
 		ret = !access_ok(VERIFY_READ, (void __user *)arg, _IOC_SIZE(cmd));
+    #else
+		ret = !access_ok((void __user *)arg, _IOC_SIZE(cmd));
+    #endif
 	}
 	
 	if (ret) {
@@ -1783,8 +1791,13 @@ int modac_mngdev_init(dev_t dev_num, int count)
 	}
 	
 	mutex_init(&mngdev_table_mutex);
-	
-	modac_mngdev_class = class_create(THIS_MODULE, MODAC_MNG_CLASS_NAME);
+
+	modac_mngdev_class = 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,4,0) || RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(9,4)
+        class_create(MODAC_MNG_CLASS_NAME);
+#else
+        class_create(THIS_MODULE, MODAC_MNG_CLASS_NAME);
+#endif
 	if (IS_ERR(modac_mngdev_class)) {
 		printk(KERN_ERR "%s <init>: Failed to create device class!\n", MODAC_MNG_CLASS_NAME);
 		return PTR_ERR(modac_mngdev_class);
