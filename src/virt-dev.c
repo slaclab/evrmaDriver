@@ -922,7 +922,13 @@ int modac_vdev_init(dev_t dev_num, int count)
 	
 	mutex_init(&vdev_table_mutex);
 	
-	modac_vdev_class = class_create(THIS_MODULE, MODAC_VIRT_CLASS_NAME);
+	modac_vdev_class = 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,4,0) || RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(9,4)
+        class_create(MODAC_VIRT_CLASS_NAME);
+#else
+        class_create(THIS_MODULE, MODAC_VIRT_CLASS_NAME);
+#endif
+
 	if (IS_ERR(modac_vdev_class)) {
 		printk(KERN_ERR "%s <init>: Failed to create device class!\n", MODAC_VIRT_CLASS_NAME);
 		return PTR_ERR(modac_vdev_class);
