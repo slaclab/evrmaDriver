@@ -7,6 +7,8 @@
 // may be copied, modified, propagated, or distributed except according to 
 // the terms contained in the LICENSE.txt file.
 //////////////////////////////////////////////////////////////////////////////
+#include <linux/version.h>
+
 #include "plx.h"
 
 #define PLX9030_INTCSR_LINTI1_ENA  0x0001 /* LINTi1 enable */
@@ -80,7 +82,11 @@ void evr_plx_init(struct evr_plx_data *plx, struct pci_dev *pcidev, int plx_bar,
 		
 		if (request_mem_region(plx->mrLC, plx->lenLC,
 					device_name) != NULL) {
+        #if LINUX_VERSION_CODE < KERNEL_VERSION(5,5,0)
 			plx->pLC = ioremap_nocache(local_conf_start, plx->lenLC);
+        #else
+			plx->pLC = ioremap(local_conf_start, plx->lenLC);
+        #endif
 		} else {
 			printk(KERN_ERR "PLX mem region request failed\n");
 			plx->pLC = NULL;

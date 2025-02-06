@@ -1,12 +1,15 @@
 RHEL = rhel7
-K_VERS := $(wildcard /lib/modules/*/build)
+K_VERS := $(wildcard /lib/modules/*/build/Makefile)
+$(info $(K_VERS))
+K_VERS := $(patsubst %/Makefile,%,$(K_VERS))
 K_VERS := $(patsubst %/,%,$(dir $(K_VERS)))
+$(info $(K_VERS))
 K_VERS := $(notdir $(K_VERS))
+$(info $(K_VERS))
 
-LINUX_VERSION=rhel7-x86_64
-HEADERS:=../../$(LINUX_VERSION)
+LINUX_VERSION=rhel9-x86_64
 
-all: $(K_VERS) $(HEADERS)
+all: $(K_VERS) ../../$(LINUX_VERSION)
 
 
 evrma-objs	+= main_evrma.o mng-dev.o virt-dev.o rm.o packet-queue.o
@@ -16,13 +19,13 @@ evrma-objs	+= evr-sim.o event-list.o
 
 obj-m += evrma.o
 
-.PHONY: $(K_VERS) $(HEADERS)
-
-$(HEADERS):
-	mkdir -p $@/include
-	cp  linux-evrma.h linux-evr-regs.h linux-modac.h  $@/include/.
+.PHONY: $(K_VERS) ../../$(LINUX_VERSION)
 
 $(K_VERS): OUTPUT_DIR=../../$@
+
+../../$(LINUX_VERSION):
+	mkdir -p $@/include
+	cp  linux-evrma.h linux-evr-regs.h linux-modac.h  $@/include/.
 
 $(K_VERS):
 	### copy the sources to make a directory for building

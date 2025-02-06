@@ -238,9 +238,17 @@ static long vdev_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned lo
 	
 	/* Check access */
 	if (_IOC_DIR(cmd) & _IOC_READ) {
+    #if LINUX_VERSION_CODE < KERNEL_VERSION(5,0,0)
 		ret = !access_ok(VERIFY_WRITE, (void __user *)arg, _IOC_SIZE(cmd));
+    #else
+		ret = !access_ok((void __user *)arg, _IOC_SIZE(cmd));
+    #endif
 	} else if(_IOC_DIR(cmd) & _IOC_WRITE) {
+    #if LINUX_VERSION_CODE < KERNEL_VERSION(5,0,0)
 		ret = !access_ok(VERIFY_READ, (void __user *)arg, _IOC_SIZE(cmd));
+    #else
+		ret = !access_ok((void __user *)arg, _IOC_SIZE(cmd));
+    #endif
 	}
 	
 	if (ret) {
@@ -557,7 +565,12 @@ static void vdev_vma_close(struct vm_area_struct *vma)
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,139)
-static int vdev_vma_fault(struct vm_fault *vmf)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,17,0)
+static int
+#else
+static vm_fault_t
+#endif
+vdev_vma_fault(struct vm_fault *vmf)
 #else
 static int vdev_vma_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
 #endif
@@ -909,7 +922,13 @@ int modac_vdev_init(dev_t dev_num, int count)
 	
 	mutex_init(&vdev_table_mutex);
 	
-	modac_vdev_class = class_create(THIS_MODULE, MODAC_VIRT_CLASS_NAME);
+	modac_vdev_class = 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,4,0) || RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(9,4)
+        class_create(MODAC_VIRT_CLASS_NAME);
+#else
+        class_create(THIS_MODULE, MODAC_VIRT_CLASS_NAME);
+#endif
+
 	if (IS_ERR(modac_vdev_class)) {
 		printk(KERN_ERR "%s <init>: Failed to create device class!\n", MODAC_VIRT_CLASS_NAME);
 		return PTR_ERR(modac_vdev_class);
