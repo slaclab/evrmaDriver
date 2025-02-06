@@ -57,6 +57,10 @@ enum {
 
 #define NO_PID 0
 
+#ifndef RHEL_RELEASE_VERSION
+#define RHEL_RELEASE_VERSION(...) 0
+#endif
+
 /*
  * which events are counted (0...MAX_COUNTED_EVENTS-1)
  */
@@ -1793,7 +1797,7 @@ int modac_mngdev_init(dev_t dev_num, int count)
 	mutex_init(&mngdev_table_mutex);
 
 	modac_mngdev_class = 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,4,0) || RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(9,4)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,4,0) || (defined(RHEL_RELEASE_CODE) && RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(9,4))
         class_create(MODAC_MNG_CLASS_NAME);
 #else
         class_create(THIS_MODULE, MODAC_MNG_CLASS_NAME);

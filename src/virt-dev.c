@@ -25,6 +25,9 @@
 #include "virt-dev.h"
 #include "packet-queue.h"
 
+#ifndef RHEL_RELEASE_VERSION
+#define RHEL_RELEASE_VERSION(...) 0
+#endif
 
 enum {
 	CLEAN_PRIV,
@@ -923,7 +926,7 @@ int modac_vdev_init(dev_t dev_num, int count)
 	mutex_init(&vdev_table_mutex);
 	
 	modac_vdev_class = 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,4,0) || RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(9,4)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,4,0) || (defined(RHEL_RELEASE_CODE) && RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(9,4))
         class_create(MODAC_VIRT_CLASS_NAME);
 #else
         class_create(THIS_MODULE, MODAC_VIRT_CLASS_NAME);
