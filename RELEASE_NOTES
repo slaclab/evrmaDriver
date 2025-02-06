@@ -1,5 +1,9 @@
  Release Notes for the evrmaDriver package
 -------------------------------------------
+R1.0.12: 2025-02-06 Jeremy Lorelli
+    * Add support for rocky9/rhel9
+    * Fix numerous build issues on kernel 5.14, and 5.14+rhel9_4
+
 R1.0.11: 2023-01-13 Bruce Hill
 	Modify rhel7-x86_64 Makefile to build evrma.ko for each installed kernel src.
 	Modify packet-queue.h to suppress annoying warning
